@@ -242,7 +242,7 @@ def main():
 
     global bot
 
-    bot = telepot.Bot('232702502:AAFEUh-lDo1vb641bOJ_fJ2ar-LsVM0zeO4')
+    bot = telepot.Bot('BOT ID HERE')
     bot.message_loop(handle)
 
     while True:
