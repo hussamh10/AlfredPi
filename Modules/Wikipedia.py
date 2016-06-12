@@ -35,9 +35,9 @@ def main():
     content.encode('ascii', 'ignore')
     content = content.encode(sys.stdout.encoding, errors='ignore')
 
-
     list = [title, url, summary] # can add content
-
-    print (str(list))
+    
+    print(summary)
+    print(url)
 
 main()

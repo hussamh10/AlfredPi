@@ -11,12 +11,17 @@ for i in range(0, arg_count):
     string = string + ' ' + sys.argv[i+1]
 string = string[1:]
 
-print (string)
-
 res = client.query(string)
 
+sr = 'asdfadsf;'
+
+imgs = []
+
 for pod in res.pods:
-	print(pod.text)
+    imgs.append(pod.img)
+
+print (imgs)
+
 	
 
 
