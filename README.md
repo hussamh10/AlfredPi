@@ -1,2 +1,2 @@
 # AlfredPi
-An raspberry pi powered virtual assistant.
+A raspberry pi powered virtual assistant.
