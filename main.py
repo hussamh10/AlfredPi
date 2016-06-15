@@ -36,6 +36,14 @@ def remReminder():
     subprocess.Popen(['python', 'Modules\\Todo.py', number, '0'])
 
 
+def changeToEpoch(date, time):
+
+    if not date:
+        return 9999999999
+
+    epoch = datetime.datetime(date[2], date[1], date[0], time[0], time[1]).timestamp()
+    return epoch
+
 def getDateTime(id):
 
     today = datetime.datetime.now()
@@ -64,7 +72,7 @@ def getDateTime(id):
             bot.sendMessage(chat_id, 'Hiding it now.', reply_markup=hide_keyboard)
 
     if quick_date == 'No':
-        return date, time
+        return ([], [])
 
     if (quick_date == 'Today'):
         today = datetime.datetime.now()
@@ -196,16 +204,15 @@ def addReminder():
     
     (date, time) = getDateTime(id)
 
-    epoch = changeToEpoch(date_time)
+    epoch = changeToEpoch(date, time)
+    print(epoch)
 
-    print (time + reminder)
-
-    msg = (time + reminder)
+    msg = (reminder + ' ' + str(epoch))
 
     global module
     module = 'alfred'
     subprocess.Popen(['python', 'Modules\\Todo.py', msg, '1'])
-        
+
 
 def downloadTorrent(msg):
 
@@ -373,10 +380,16 @@ def askGoogle(msg):
 
 def askReddit(msg):
 
+    chatAction('typing')
     if 'joke' in msg:
         callJoke(msg)
     elif 'fact' in msg:
         pass
+	elif 'news' in msg:
+		pass
+	elif 'shower' in msg:
+		pass
+	elif 'quote' in msg
         #callMessage(msg)
         
 
@@ -447,13 +460,43 @@ def handle(msg):
         if '.torrent' in msg['document']['file_name']:
             downloadTorrent(msg)
         
+def getNextReminder():
+    
+    file = open('todo.txt', 'r')
+    agenda = file.readlines()
+    print (agenda)
+    if not agenda:
+        return []
+
+    i = 0
+    min = 9999999999
+    min_i = 0
+
+    for line in agenda :
+        i += 1
+        epoch = (line[-13:-3])
+        epoch = int(epoch)
+        if epoch < min:
+            min = epoch
+            min_i = i
+            
+    msg = {'time': min, 'message': agenda[min_i-1][:-13], 'index':min_i }
+    return msg
+
+def remove(index):
+    subprocess.Popen(['python', 'Modules\\Todo.py', str(index), '0'])
 
 def handleEvents():
     
-    if reminderAlert():
-        # send reminder
-        pass
-    
+    now = time.time()
+    msg = getNextReminder()
+    if not msg:
+        return 
+
+    if msg['time'] < now:
+        sendMessage(msg['message'])
+        remove(msg['index'])
+
 
 def main(): 
 
@@ -463,7 +506,8 @@ def main():
     bot.message_loop(handle)
 
     while True:
-        pass
-    
 
+        time.sleep(2)
+        handleEvents()
+        
 main()
