@@ -23,7 +23,7 @@ def addNote():
     id = int(response[0]['update_id'])
 
     response = []
-    sendMessage('What would you like to add?')
+    sendMessage('What would you like to add, sir?')
 
     id = id+1
     
@@ -127,7 +127,7 @@ def getDateTime(id):
         
         if response :
             quick_date = str(response[0]['message']['text'])
-            bot.sendMessage(chat_id, 'Hiding it now.', reply_markup=hide_keyboard)
+            bot.sendMessage(chat_id, 'Got it.', reply_markup=hide_keyboard)
 
     if quick_date == 'No':
         return ([], [])
@@ -157,7 +157,7 @@ def getDateTime(id):
 
             if response :
                 year = str(response[0]['message']['text'])
-                bot.sendMessage(chat_id, 'Hiding it now.', reply_markup=hide_keyboard)
+                bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
 
         date[2] = int(year)
         quick_date = 'Enter Month'
@@ -178,7 +178,7 @@ def getDateTime(id):
             response = bot.getUpdates(id)
             if response :
                 month = str(response[0]['message']['text'])
-                bot.sendMessage(chat_id, 'Hiding it now.', reply_markup=hide_keyboard)
+                bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
 
         date[1] = int(month)
         quick_date = 'Enter Date'
@@ -196,7 +196,7 @@ def getDateTime(id):
             response = bot.getUpdates(id)
             if response :
                 day = str(response[0]['message']['text'])
-                bot.sendMessage(chat_id, 'Hiding it now.', reply_markup=hide_keyboard)
+                bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
 
         date[0] = int(day)
         
@@ -251,7 +251,7 @@ def addReminder():
     id = int(response[0]['update_id'])
 
     response = []
-    sendMessage('What would you like to add?')
+    sendMessage('What would you like to add, sir?')
 
     id = id+1
     
@@ -370,6 +370,9 @@ def getAgenda():
 
     i = 0
 
+    if not agenda:
+        sendMessage('No upcoming tasks, sir')
+
     for line in agenda :
         i += 1
         sendMessage(str(i) + '. ' + line)
@@ -384,7 +387,7 @@ def askImdb(msg):
     answer = subprocess.check_output(['python', 'Modules\\IMDB.py', msg])
     answer = getStrFromList(answer)
     
-    string = 'Title: ' + answer[0] + '\nRating: ' + str(answer[1]) + '\nRuntime: ' + answer[2] + '\nRelease Date: ' + answer[3] + '\nCertification: ' + answer[4]
+    string = 'Title: ' + answer[0] + '\nRating: ' + str(answer[1]) + '\nRuntime: ' + answer[2] + ' minutes' + '\nRelease Date: ' + answer[3] + '\nCertification: ' + answer[4]
 
     sendMessage(string)
 
