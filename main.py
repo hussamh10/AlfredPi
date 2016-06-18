@@ -14,6 +14,64 @@ module = 0
 bot = 0
 
 
+def addNote():
+
+    note = ''
+
+    response = bot.getUpdates()
+
+    id = int(response[0]['update_id'])
+
+    response = []
+    sendMessage('What would you like to add?')
+
+    id = id+1
+    
+    while not response:
+        response = bot.getUpdates(id)
+        if response :
+            note = (response[0]['message']['text'])
+    
+
+    global module
+    module = 'alfred'
+
+    subprocess.Popen(['python', 'Modules\\Notes.py', note, '1'])
+
+def remNote():
+
+    getNotes()
+    sendMessage('Which note would you like to remove?')
+
+    response = bot.getUpdates()
+
+    id = int(response[0]['update_id'])
+
+    response = []
+    id = id+1
+    
+    while not response:
+        response = bot.getUpdates(id)
+        if response :
+            number = (response[0]['message']['text'])
+
+    global module
+    module = 'alfred'
+    subprocess.Popen(['python', 'Modules\\Notes.py', number, '0'])
+
+
+def getNotes():
+
+    file = open('notes.txt', 'r')
+    agenda = file.readlines()
+
+    i = 0
+
+    for line in agenda :
+        i += 1
+        sendMessage(str(i) + '. ' + line)
+    
+
 def remReminder():
 
     getAgenda()
@@ -290,12 +348,20 @@ def askAlfred(msg):
     if 'agenda' in msg:
         getAgenda()
 
+    if 'note' and 'show' in msg:
+        getNotes()
+
     if 'add' in msg and 'reminder' in msg:
         addReminder()
     
     if 'remove' in msg and 'reminder' in msg:
         remReminder()
 
+    if 'add' in msg and 'note' in msg:
+        addNote()
+
+    if 'remove' in msg and 'note' in msg:
+        remNote()
 
 def getAgenda():
 
@@ -308,6 +374,19 @@ def getAgenda():
         i += 1
         sendMessage(str(i) + '. ' + line)
     
+def askImdb(msg):
+
+    msg = msg.lower()
+
+    if ('ask imdb ' in msg):
+        msg.replace('ask imdb ', '')
+
+    answer = subprocess.check_output(['python', 'Modules\\IMDB.py', msg])
+    answer = getStrFromList(answer)
+    
+    string = 'Title: ' + answer[0] + '\nRating: ' + str(answer[1]) + '\nRuntime: ' + answer[2] + '\nRelease Date: ' + answer[3] + '\nCertification: ' + answer[4]
+
+    sendMessage(string)
 
 def askWikipedia(msg):
     
@@ -380,18 +459,41 @@ def askGoogle(msg):
 
 def askReddit(msg):
 
+    msg = msg.lower()
+
+    if 'ask reddit' in msg:
+        msg.replace('ask replace', '')
+
     chatAction('typing')
     if 'joke' in msg:
+        sub = 'Jokes'
         callJoke(msg)
     elif 'fact' in msg:
-        pass
-	elif 'news' in msg:
-		pass
-	elif 'shower' in msg:
-		pass
-	elif 'quote' in msg
-        #callMessage(msg)
-        
+        sub = 'facts'
+    elif 'news' in msg:
+        sub = 'news'
+    elif 'shower' in msg:
+        sub = 'Showerthoughts'
+    elif 'quote' in msg:
+        sub = 'quotes'
+    else:
+        if ' ' in msg:
+            msg.replace (' ', '')
+        sub = msg
+    
+    count = 5
+    lst = re.findall('\d+', msg )
+    if lst:
+        count = int(lst[0])
+    elif ' a ' in msg:
+        count = 1
+
+    posts = subprocess.check_output(['python', 'Modules\\Reddit.py', sub, str(count)])
+    posts = getStrFromList(posts)
+
+    for post in posts:
+        sendMessage(post[0] + '\n - \n' + post[1])
+
 
 def callJoke(msg):
     
@@ -414,7 +516,7 @@ def callJoke(msg):
 
 def getModule(msg):
 
-    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram']
+    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb']
     
     for module in modules:
         if module in msg.lower():
@@ -443,6 +545,8 @@ def HandleText(msg):
         askAlfred(msg)
     elif module == 'wolfram':
         askWolfram(msg)
+    elif module == 'imdb':
+        askImdb(msg)
         
 
 def handle(msg):
@@ -464,7 +568,6 @@ def getNextReminder():
     
     file = open('todo.txt', 'r')
     agenda = file.readlines()
-    print (agenda)
     if not agenda:
         return []
 
@@ -507,7 +610,7 @@ def main():
 
     while True:
 
-        time.sleep(2)
+        time.sleep(10)
         handleEvents()
         
 main()
