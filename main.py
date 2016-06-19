@@ -516,10 +516,19 @@ def callJoke(msg):
     for j in joke:
         sendMessage(j[0] + '\n - \n' + j[1])
 
+def askPi(msg):
+
+    if 'temp' in msg:
+
+        temp = subprocess.check_output(['bash temp.sh'])
+        temp = str(temp, 'utf-8')
+
+
+
 
 def getModule(msg):
 
-    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb']
+    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi']
     
     for module in modules:
         if module in msg.lower():
@@ -550,6 +559,8 @@ def HandleText(msg):
         askWolfram(msg)
     elif module == 'imdb':
         askImdb(msg)
+    elif module == 'pi':
+        askPi(msg)
         
 
 def handle(msg):
