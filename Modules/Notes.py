@@ -5,9 +5,11 @@ def main():
     msg = sys.argv[1]
     flag = sys.argv[2]
 
+
     print (flag)
 
     if flag == '1':
+        msg = msg.replace('\n', '$')
         print (msg + "Writing")
         file = open('notes.txt', 'a')
         print('ok')

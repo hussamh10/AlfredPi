@@ -13,6 +13,31 @@ chat_id = 0
 module = 0
 bot = 0
 
+def askSleep(module, msg):
+
+
+    if module == 'wake':
+        sendMessage('When would you like to wake, sir?')
+
+    if module == 'sleep':
+        sendMessage('When are you going to sleep, sir?')
+
+    response = bot.getUpdates()
+    id = int(response[0]['update_id'])
+
+    (date, time) = getDateTime(id + 1)
+    epoch = changeToEpoch(date, time)
+
+    if module == 'wake':
+        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', '0', str(epoch)])
+        asnwer = getStrFromList(answer)
+        print (answer) 
+
+    if module == 'sleep':
+
+        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', '1', str(epoch)])
+        asnwer = getStrFromList(answer)
+        print (answer)
 
 def addNote():
 
@@ -69,6 +94,7 @@ def getNotes():
 
     for line in agenda :
         i += 1
+        line = line.replace('$', '\n')
         sendMessage(str(i) + '. ' + line)
     
 
@@ -267,6 +293,8 @@ def addReminder():
 
     msg = (reminder + ' ' + str(epoch))
 
+    sendMessage('Your reminder has been added sir.')
+
     global module
     module = 'alfred'
     subprocess.Popen(['python', 'Modules\\Todo.py', msg, '1'])
@@ -342,26 +370,35 @@ def askAlfred(msg):
         answer = str(answer, 'utf-8')
         sendMessage (answer)
 
-    if 'rps' in msg or 'rock' in msg:
+    elif 'rps' in msg or 'rock' in msg:
         arg = 2
 
-    if 'agenda' in msg:
+    elif 'agenda' in msg:
         getAgenda()
 
-    if 'note' and 'show' in msg:
+    elif 'note' and 'show' in msg:
         getNotes()
 
-    if 'add' in msg and 'reminder' in msg:
+    elif 'add' in msg and 'reminder' in msg:
         addReminder()
     
-    if 'remove' in msg and 'reminder' in msg:
+    elif 'remove' in msg and 'reminder' in msg:
         remReminder()
 
-    if 'add' in msg and 'note' in msg:
+    elif 'add' in msg and 'note' in msg:
         addNote()
 
-    if 'remove' in msg and 'note' in msg:
+    elif 'remove' in msg and 'note' in msg:
         remNote()
+
+    elif 'wake' in msg:
+        askSleep('wake', msg)
+
+    elif 'sleep' in msg:
+        askSleep('sleep', msg)
+
+    elif '?' in msg:
+        sendMessage('How may I assist you, sir?')
 
 def getAgenda():
 
@@ -465,12 +502,11 @@ def askReddit(msg):
     msg = msg.lower()
 
     if 'ask reddit' in msg:
-        msg.replace('ask replace', '')
+        msg.replace('ask reddit', '')
 
     chatAction('typing')
     if 'joke' in msg:
         sub = 'Jokes'
-        callJoke(msg)
     elif 'fact' in msg:
         sub = 'facts'
     elif 'news' in msg:
@@ -481,12 +517,14 @@ def askReddit(msg):
         sub = 'quotes'
     else:
         if ' ' in msg:
-            msg.replace (' ', '')
+            msg = msg.replace (' ', '')
         sub = msg
     
     count = 5
     lst = re.findall('\d+', msg )
     if lst:
+        if (lst[0] in sub):
+            sub = sub.replace(lst[0], '')
         count = int(lst[0])
     elif ' a ' in msg:
         count = 1
@@ -496,25 +534,6 @@ def askReddit(msg):
 
     for post in posts:
         sendMessage(post[0] + '\n - \n' + post[1])
-
-
-def callJoke(msg):
-    
-    joke_count = 1
-
-    if 'jokes' in msg:
-        joke_count = 5
-        lst = re.findall('\d+', msg )
-        if lst:
-            joke_count = int(lst[0])
-            if joke_count > 5:
-                joke_count = 5
-    
-    joke = subprocess.check_output(['python', 'Modules\\joke.py', str(joke_count)])
-    joke = getStrFromList(joke)
-
-    for j in joke:
-        sendMessage(j[0] + '\n - \n' + j[1])
 
 def askPi(msg):
 
@@ -592,10 +611,11 @@ def getNextReminder():
     for line in agenda :
         i += 1
         epoch = (line[-13:-3])
-        epoch = int(epoch)
-        if epoch < min:
-            min = epoch
-            min_i = i
+        if ('9999999999' in epoch):
+            epoch = int(epoch)
+            if epoch < min:
+                min = epoch
+                min_i = i
             
     msg = {'time': min, 'message': agenda[min_i-1][:-13], 'index':min_i }
     return msg
@@ -624,7 +644,7 @@ def main():
 
     while True:
 
-        time.sleep(10)
+        time.sleep(1)
         handleEvents()
         
 main()
