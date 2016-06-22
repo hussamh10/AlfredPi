@@ -123,7 +123,7 @@ def remReminder():
 def changeToEpoch(date, time):
 
     if not date:
-        return 9999999999
+        return 9999999999.0
 
     epoch = datetime.datetime(date[2], date[1], date[0], time[0], time[1]).timestamp()
     return epoch
@@ -324,8 +324,12 @@ def chatAction(msg):
 
 
 def getStrFromList(string):
-    string = str(string, "utf-8")
-    list = ast.literal_eval(string)
+
+    try :
+        string = str(string, "utf-8")
+        list = ast.literal_eval(string)
+    except Exception as e:
+        list = [['Error', 'from getStrFromList']]
 
     return list
 
@@ -400,6 +404,14 @@ def askAlfred(msg):
     elif '?' in msg:
         sendMessage('How may I assist you, sir?')
 
+
+def changeEpochToDT(epoch):
+
+    if epoch == 9999999999:
+        return ' '
+    time = str(datetime.datetime.fromtimestamp(epoch))
+    return time
+
 def getAgenda():
 
     file = open('todo.txt', 'r')
@@ -412,7 +424,8 @@ def getAgenda():
 
     for line in agenda :
         i += 1
-        sendMessage(str(i) + '. ' + line)
+        rem = line[:-13] + ' ' + changeEpochToDT(int(line[-13:-3]))
+        sendMessage(str(i) + '. ' + rem)
     
 def askImdb(msg):
 
@@ -502,7 +515,7 @@ def askReddit(msg):
     msg = msg.lower()
 
     if 'ask reddit' in msg:
-        msg.replace('ask reddit', '')
+        msg = msg.replace('ask reddit', '')
 
     chatAction('typing')
     if 'joke' in msg:
@@ -534,6 +547,7 @@ def askReddit(msg):
 
     for post in posts:
         sendMessage(post[0] + '\n - \n' + post[1])
+            
 
 def askPi(msg):
 
@@ -610,12 +624,13 @@ def getNextReminder():
 
     for line in agenda :
         i += 1
-        epoch = (line[-13:-3])
-        if ('9999999999' in epoch):
-            epoch = int(epoch)
-            if epoch < min:
-                min = epoch
-                min_i = i
+        epoch = int(line[-13:-3])
+        print(epoch)
+        if (9999999999 == epoch):
+            continue
+        elif (epoch) < min:
+            min = epoch
+            min_i = i
             
     msg = {'time': min, 'message': agenda[min_i-1][:-13], 'index':min_i }
     return msg
@@ -627,13 +642,13 @@ def handleEvents():
     
     now = time.time()
     msg = getNextReminder()
-    if not msg:
+    print(msg)
+    if not msg or msg['time'] == 9999999999:
         return 
 
     if msg['time'] < now:
         sendMessage(msg['message'])
         remove(msg['index'])
-
 
 def main(): 
 
@@ -643,8 +658,7 @@ def main():
     bot.message_loop(handle)
 
     while True:
-
-        time.sleep(1)
+        time.sleep(15)
         handleEvents()
         
 main()
