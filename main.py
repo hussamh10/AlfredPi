@@ -1,3 +1,6 @@
+#TODO change dir in openFile
+#TODO sendPhoto in askComic
+
 import datetime
 import pprint
 import sys
@@ -12,35 +15,124 @@ import urllib.request
 chat_id = 0
 module = 0
 bot = 0
+NO_TIME = 9999999999
+
+def playAudio(msg):
+    dir = 'c:/Users/hussam/Desktop/' + 'audio.ogg'
+    file_id = msg['voice']['file_id']
+    #bot.download_file(file_id, dir)
+
+    os.system(dir)
+
+def askComic(msg):
+    msg = msg.lower()
+    if 'jl8' in msg:
+        msg = msg.replace('jl8', '')
+
+    lst = re.findall('\d+', msg )
+    if lst:
+        if len(lst) == 2:
+            answer = subprocess.check_output(['python', 'Modules\\JL8.py', str(lst[0]), str(lst[1])])
+            answer = str(answer, 'ascii')
+        else:
+            answer = subprocess.check_output(['python', 'Modules\\JL8.py', str(lst[0])])
+            answer = str(answer, 'ascii')
+    else :
+        answer = subprocess.check_output(['python', 'Modules\\JL8.py', '1'])
+        answer = str(answer, 'ascii')
+        print(answer)
 
 def askSleep(module, msg):
-
-
     if module == 'wake':
         sendMessage('When would you like to wake, sir?')
 
     if module == 'sleep':
         sendMessage('When are you going to sleep, sir?')
 
+    today = datetime.datetime.now()
+    date = [0, 0, 0]
+    date[0] = today.day
+    date[1] = today.month
+    date[2] = today.year
+
+    time = [0,0]
+    time[0] = today.hour
+    time[1] = today.minute
+
     response = bot.getUpdates()
     id = int(response[0]['update_id'])
+    id += 1
 
-    (date, time) = getDateTime(id + 1)
+    hide_keyboard = {'hide_keyboard': True}
+    quick_date_kbrd = {'keyboard': [['Today', 'Tomorrow']]}
+    bot.sendMessage(chat_id, 'When, sir?', reply_markup=quick_date_kbrd)
+
+    response = []
+
+    while not response:
+        response = bot.getUpdates(id)
+
+    bot.sendMessage(chat_id, 'Got it.', reply_markup=hide_keyboard)
+    id += 1
+    d = response
+
+    # Enter Time
+
+    bot.sendMessage(chat_id, 'Enter Time')
+
+    entered_time = 0
+
+    response = []
+    
+    while not response:
+        response = bot.getUpdates(id)
+        if response :
+            entered_time = str(response[0]['message']['text'])
+
+    if 'm' in entered_time:
+        # am / pm
+        if 'am' in entered_time:
+            entered_time = entered_time.replace('am', '')
+            entered_time = entered_time.split(':')
+            entered_time[0] = int(entered_time[0])
+            entered_time[1] = int(entered_time[1])
+            
+        if 'pm' in entered_time:
+            entered_time = entered_time.replace('pm', '')
+            entered_time = entered_time.split(':')
+            entered_time[0] = int(entered_time[0])
+            entered_time[1] = int(entered_time[1])
+            entered_time[0] += 12
+
+    else:
+        entered_time = entered_time.split(':')
+        entered_time[0] = int(entered_time[0])
+        entered_time[1] = int(entered_time[1])
+
+    time[0] = entered_time[0]
+    time[1] = entered_time[1]
+
+    if 'Tomorrow' in d:
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+        date[0] = tomorrow.day
+        date[1] = tomorrow.month
+        date[2] = tomorrow.year
+
+
     epoch = changeToEpoch(date, time)
 
     if module == 'wake':
-        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', '0', str(epoch)])
+        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', 0, int(epoch)])
         asnwer = getStrFromList(answer)
         print (answer) 
 
     if module == 'sleep':
 
-        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', '1', str(epoch)])
+        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', 1, int(epoch)])
         asnwer = getStrFromList(answer)
         print (answer)
 
 def addNote():
-
     note = ''
 
     response = bot.getUpdates()
@@ -64,7 +156,6 @@ def addNote():
     subprocess.Popen(['python', 'Modules\\Notes.py', note, '1'])
 
 def remNote():
-
     getNotes()
     sendMessage('Which note would you like to remove?')
 
@@ -84,9 +175,7 @@ def remNote():
     module = 'alfred'
     subprocess.Popen(['python', 'Modules\\Notes.py', number, '0'])
 
-
 def getNotes():
-
     file = open('notes.txt', 'r')
     agenda = file.readlines()
 
@@ -96,10 +185,8 @@ def getNotes():
         i += 1
         line = line.replace('$', '\n')
         sendMessage(str(i) + '. ' + line)
-    
 
 def remReminder():
-
     getAgenda()
     sendMessage('Which reminder would you like to remove?')
 
@@ -119,9 +206,7 @@ def remReminder():
     module = 'alfred'
     subprocess.Popen(['python', 'Modules\\Todo.py', number, '0'])
 
-
 def changeToEpoch(date, time):
-
     if not date:
         return 9999999999.0
 
@@ -129,7 +214,6 @@ def changeToEpoch(date, time):
     return epoch
 
 def getDateTime(id):
-
     today = datetime.datetime.now()
     date = [0, 0, 0]
     date[0] = today.day
@@ -264,11 +348,9 @@ def getDateTime(id):
     time[0] = entered_time[0]
     time[1] = entered_time[1]
 
-    print(date, time)
     return date, time
     
 def addReminder():
-
     time = ''
     reminder = ''
 
@@ -289,7 +371,6 @@ def addReminder():
     (date, time) = getDateTime(id)
 
     epoch = changeToEpoch(date, time)
-    print(epoch)
 
     msg = (reminder + ' ' + str(epoch))
 
@@ -299,32 +380,32 @@ def addReminder():
     module = 'alfred'
     subprocess.Popen(['python', 'Modules\\Todo.py', msg, '1'])
 
-
-def downloadTorrent(msg):
-
-    # TODO change dir
+def openFile(msg, pre=''):
     file_name = msg['document']['file_name']
     file_id = msg['document']['file_id']
     dir = 'c:/Users/hussam/Desktop/' + file_name
 
-    bot.download_file(file_id, dir)
-    os.system(dir)
+    print('there')
 
+    #TODO bot.download_file(file_id, dir)
 
-def reminderAlert():
-    # check if reminder 
-    pass
+    print('here')
+
+    if not pre:
+        os.system(dir)
+    else:
+        sendMessage(str(os.popen('python' + ' ' + dir).read()))
 
 
 def sendMessage(msg):
     bot.sendMessage(chat_id, msg)
+    return
 
 def chatAction(msg):
     bot.sendChatAction(chat_id, msg)
-
+    return
 
 def getStrFromList(string):
-
     try :
         string = str(string, "utf-8")
         list = ast.literal_eval(string)
@@ -333,9 +414,7 @@ def getStrFromList(string):
 
     return list
 
-
 def askDictionary(msg):
-
     msg = msg.lower()
     
     if ('ask dict ' in msg):
@@ -349,9 +428,7 @@ def askDictionary(msg):
     
     print (answer)
 
-
 def askWolfram(msg):
-
     msg = msg.lower()
 
     if ('ask wolfram ' in msg):
@@ -363,9 +440,7 @@ def askWolfram(msg):
     
     print (answer)
 
-
 def askAlfred(msg):
-    
     global module
     
     if 'flip' in msg or 'coin' in msg:
@@ -404,16 +479,13 @@ def askAlfred(msg):
     elif '?' in msg:
         sendMessage('How may I assist you, sir?')
 
-
 def changeEpochToDT(epoch):
-
-    if epoch == 9999999999:
+    if epoch == NO_TIME:
         return ' '
     time = str(datetime.datetime.fromtimestamp(epoch))
     return time
 
 def getAgenda():
-
     file = open('todo.txt', 'r')
     agenda = file.readlines()
 
@@ -424,11 +496,10 @@ def getAgenda():
 
     for line in agenda :
         i += 1
-        rem = line[:-13] + ' ' + changeEpochToDT(int(line[-13:-3]))
+        rem = line[:-13] + ' [' + changeEpochToDT(int(line[-13:-3])) + ''
         sendMessage(str(i) + '. ' + rem)
     
 def askImdb(msg):
-
     msg = msg.lower()
 
     if ('ask imdb ' in msg):
@@ -442,7 +513,6 @@ def askImdb(msg):
     sendMessage(string)
 
 def askWikipedia(msg):
-    
     msg = msg.lower()
 
     if ('ask wiki' in msg):
@@ -459,7 +529,11 @@ def askWikipedia(msg):
 
     chatAction('typing')
         
-    answer = subprocess.check_output(['python', 'Modules\\Wikipedia.py', msg, '5'])
+    try:
+        answer = subprocess.check_output(['python', 'Modules\\Wikipedia.py', msg, '5'])
+    except Exception as e:
+        answer = str(e)
+
     answer = str(answer, 'utf-8')
 
     summary =''
@@ -477,7 +551,6 @@ def askWikipedia(msg):
     sendMessage(content[0][2:-1])
 
 def askGoogle(msg):
-
     msg = msg.lower()
 
     if ('ask google ' in msg):
@@ -509,9 +582,7 @@ def askGoogle(msg):
     sendMessage(url + '\n' )
     sendMessage(draft)
     
-
 def askReddit(msg):
-
     msg = msg.lower()
 
     if 'ask reddit' in msg:
@@ -547,30 +618,35 @@ def askReddit(msg):
 
     for post in posts:
         sendMessage(post[0] + '\n - \n' + post[1])
-            
 
 def askPi(msg):
-
     if 'temp' in msg:
-
         temp = subprocess.check_output(['bash temp.sh'])
         temp = str(temp, 'utf-8')
+    elif 'shell' in msg:
+        msg = msg.replace('ask pi shell ', '')
+        print(msg)
+        out = subprocess.check_output([msg])
+        print('Done')
+        print(out)
+        out = str(out, 'utf-8')
 
+        # TODO remove URL links
 
-
+        if out:
+            sendMessage(out)
+        else:
+            sendMessage('Done!')
 
 def getModule(msg):
-
-    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi']
+    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic']
     
     for module in modules:
         if module in msg.lower():
             return module
     return 0
-    
 
 def HandleText(msg):
-
     global module
     
     temp_module = getModule(msg)
@@ -594,39 +670,51 @@ def HandleText(msg):
         askImdb(msg)
     elif module == 'pi':
         askPi(msg)
-        
+    elif module == 'comic':
+        askComic(msg)
 
 def handle(msg):
-
     global chat_id
     content_type, chat_type, chat_id = telepot.glance(msg)
+    music_formats = ['.mp3', '.wav', '.wma', '.flac', '.3ga', '.m4a', '.aac', '.ogg']
+
+    print(msg)
 
     if (content_type == 'text'):
         HandleText(msg['text'])
+
+    if (content_type == 'voice'):
+        playAudio(msg)
 
     if (content_type == 'photo'):
         pass
 
     if (content_type == 'document'):
         if '.torrent' in msg['document']['file_name']:
-            downloadTorrent(msg)
+            openFile(msg)
+
+        if '.py' in msg['document']['file_name']:
+            openFile(msg, pre='python3')
+
+        else:
+            for format in music_formats:
+                if format in msg['document']['file_name']:
+                    openFile(msg)
         
 def getNextReminder():
-    
     file = open('todo.txt', 'r')
     agenda = file.readlines()
     if not agenda:
         return []
 
     i = 0
-    min = 9999999999
+    min = NO_TIME
     min_i = 0
 
     for line in agenda :
         i += 1
         epoch = int(line[-13:-3])
-        print(epoch)
-        if (9999999999 == epoch):
+        if (NO_TIME == epoch):
             continue
         elif (epoch) < min:
             min = epoch
@@ -637,12 +725,11 @@ def getNextReminder():
 
 def remove(index):
     subprocess.Popen(['python', 'Modules\\Todo.py', str(index), '0'])
+    return 
 
 def handleEvents():
-    
     now = time.time()
     msg = getNextReminder()
-    print(msg)
     if not msg or msg['time'] == 9999999999:
         return 
 
@@ -651,14 +738,12 @@ def handleEvents():
         remove(msg['index'])
 
 def main(): 
-
     global bot
 
     bot = telepot.Bot('232702502:AAFEUh-lDo1vb641bOJ_fJ2ar-LsVM0zeO4')
     bot.message_loop(handle)
 
     while True:
-        time.sleep(15)
         handleEvents()
         
 main()
