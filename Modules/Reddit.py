@@ -16,9 +16,9 @@ def reddit(sub, count):
     for post in out :
         if i in r:
             if 'www.reddit' in post.url:
-                list.append([str(post.title, 'utf-8'), str(post.selftext, 'utf-8')])
+                list.append([(post.title), (post.selftext)])
             else:
-                list.append([str(post.title), str(post.selftext) + ' ' + str(post.url)])
+                list.append([(post.title), (post.selftext) + ' ' + (post.url)])
         i += 1
     
     try :

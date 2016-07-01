@@ -32,13 +32,13 @@ def askComic(msg):
     lst = re.findall('\d+', msg )
     if lst:
         if len(lst) == 2:
-            answer = subprocess.check_output(['python', 'Modules\\JL8.py', str(lst[0]), str(lst[1])])
+            answer = subprocess.check_output(['python3', 'Modules/JL8.py', str(lst[0]), str(lst[1])])
             answer = str(answer, 'ascii')
         else:
-            answer = subprocess.check_output(['python', 'Modules\\JL8.py', str(lst[0])])
+            answer = subprocess.check_output(['python3', 'Modules/JL8.py', str(lst[0])])
             answer = str(answer, 'ascii')
     else :
-        answer = subprocess.check_output(['python', 'Modules\\JL8.py', '1'])
+        answer = subprocess.check_output(['python3', 'Modules/JL8.py', '1'])
         answer = str(answer, 'ascii')
         print(answer)
 
@@ -122,14 +122,14 @@ def askSleep(module, msg):
     epoch = changeToEpoch(date, time)
 
     if module == 'wake':
-        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', 0, int(epoch)])
-        asnwer = getStrFromList(answer)
+        answer = subprocess.check_output(['python3', 'Modules/Sleep.py', 0, int(epoch)])
+        answer = getStrFromList(answer)
         print (answer) 
 
     if module == 'sleep':
 
-        answer = subprocess.check_output(['python', 'Modules\\Sleep.py', 1, int(epoch)])
-        asnwer = getStrFromList(answer)
+        answer = subprocess.check_output(['python3', 'Modules/Sleep.py', 1, int(epoch)])
+        answer = getStrFromList(answer)
         print (answer)
 
 def addNote():
@@ -153,7 +153,7 @@ def addNote():
     global module
     module = 'alfred'
 
-    subprocess.Popen(['python', 'Modules\\Notes.py', note, '1'])
+    subprocess.Popen(['python3', 'Modules/Notes.py', note, '1'])
 
 def remNote():
     getNotes()
@@ -173,7 +173,7 @@ def remNote():
 
     global module
     module = 'alfred'
-    subprocess.Popen(['python', 'Modules\\Notes.py', number, '0'])
+    subprocess.Popen(['python3', 'Modules/Notes.py', number, '0'])
 
 def getNotes():
     file = open('notes.txt', 'r')
@@ -204,13 +204,14 @@ def remReminder():
 
     global module
     module = 'alfred'
-    subprocess.Popen(['python', 'Modules\\Todo.py', number, '0'])
+    subprocess.Popen(['python3', 'Modules/Todo.py', number, '0'])
 
 def changeToEpoch(date, time):
     if not date:
         return 9999999999.0
 
     epoch = datetime.datetime(date[2], date[1], date[0], time[0], time[1]).timestamp()
+    epoch = epoch - 10800
     return epoch
 
 def getDateTime(id):
@@ -378,7 +379,7 @@ def addReminder():
 
     global module
     module = 'alfred'
-    subprocess.Popen(['python', 'Modules\\Todo.py', msg, '1'])
+    subprocess.Popen(['python3', 'Modules/Todo.py', msg, '1'])
 
 def openFile(msg, pre=''):
     file_name = msg['document']['file_name']
@@ -394,7 +395,7 @@ def openFile(msg, pre=''):
     if not pre:
         os.system(dir)
     else:
-        sendMessage(str(os.popen('python' + ' ' + dir).read()))
+        sendMessage(str(os.popen('python3' + ' ' + dir).read()))
 
 
 def sendMessage(msg):
@@ -424,7 +425,7 @@ def askDictionary(msg):
     if ('define ' in msg):
         msg = msg.replace ('define ', '')
 
-    answer = subprocess.check_output(['python', 'Modules\\Dictoinary.py', msg])
+    answer = subprocess.check_output(['python3', 'Modules/Dictoinary.py', msg])
     
     print (answer)
 
@@ -434,7 +435,7 @@ def askWolfram(msg):
     if ('ask wolfram ' in msg):
         msg = msg.replace ('ask wolfram', '')
 
-    answer = subprocess.check_output(['python', 'Modules\\Wolfram.py', msg])
+    answer = subprocess.check_output(['python3', 'Modules/Wolfram.py', msg])
     answer = getStrFromList(answer)
 
     
@@ -442,10 +443,11 @@ def askWolfram(msg):
 
 def askAlfred(msg):
     global module
+    msg = msg.lower()
     
     if 'flip' in msg or 'coin' in msg:
         arg = 1
-        answer = subprocess.check_output(['python', 'Modules\\Alfred.py', str(arg)])
+        answer = subprocess.check_output(['python3', 'Modules/Alfred.py', str(arg)])
         answer = str(answer, 'utf-8')
         sendMessage (answer)
 
@@ -455,10 +457,10 @@ def askAlfred(msg):
     elif 'agenda' in msg:
         getAgenda()
 
-    elif 'note' and 'show' in msg:
+    elif 'note' in msg and'show' in msg:
         getNotes()
 
-    elif 'add' in msg and 'reminder' in msg:
+    elif 'add' in msg and 'rem' in msg:
         addReminder()
     
     elif 'remove' in msg and 'reminder' in msg:
@@ -505,7 +507,7 @@ def askImdb(msg):
     if ('ask imdb ' in msg):
         msg.replace('ask imdb ', '')
 
-    answer = subprocess.check_output(['python', 'Modules\\IMDB.py', msg])
+    answer = subprocess.check_output(['python3', 'Modules/IMDB.py', msg])
     answer = getStrFromList(answer)
     
     string = 'Title: ' + answer[0] + '\nRating: ' + str(answer[1]) + '\nRuntime: ' + answer[2] + ' minutes' + '\nRelease Date: ' + answer[3] + '\nCertification: ' + answer[4]
@@ -530,7 +532,7 @@ def askWikipedia(msg):
     chatAction('typing')
         
     try:
-        answer = subprocess.check_output(['python', 'Modules\\Wikipedia.py', msg, '5'])
+        answer = subprocess.check_output(['python3', 'Modules/Wikipedia.py', msg, '5'])
     except Exception as e:
         answer = str(e)
 
@@ -566,12 +568,15 @@ def askGoogle(msg):
 
     url = 'https://www.google.com.pk/search?q='
 
+    m = ''
+
     for i in msg:
+        m = m + i
         url = url + i
 
     chatAction('typing')
 
-    answer = subprocess.check_output(['python', 'Modules\\Google.py', msg])
+    answer = subprocess.check_output(['python3', 'Modules/Google.py', m])
     answer = getStrFromList(answer)
 
     draft = '' 
@@ -613,7 +618,7 @@ def askReddit(msg):
     elif ' a ' in msg:
         count = 1
 
-    posts = subprocess.check_output(['python', 'Modules\\Reddit.py', sub, str(count)])
+    posts = subprocess.check_output(['python3', 'Modules/Reddit.py', sub, str(count)])
     posts = getStrFromList(posts)
 
     for post in posts:
@@ -621,12 +626,22 @@ def askReddit(msg):
 
 def askPi(msg):
     if 'temp' in msg:
-        temp = subprocess.check_output(['bash temp.sh'])
+        temp = subprocess.check_output(['bash', 'temp.sh'])
         temp = str(temp, 'utf-8')
+        print(temp)
+        sendMessage(temp)
+
     elif 'shell' in msg:
         msg = msg.replace('ask pi shell ', '')
+        msg = msg.replace('shell ', '')
+
+        if ('rm ' in msg):
+            sendMessage ('Sorry Dave, I can\'t do that.')
+            return 
+
+        msg = msg.split()
         print(msg)
-        out = subprocess.check_output([msg])
+        out = subprocess.check_output(msg)
         print('Done')
         print(out)
         out = str(out, 'utf-8')
@@ -678,8 +693,6 @@ def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     music_formats = ['.mp3', '.wav', '.wma', '.flac', '.3ga', '.m4a', '.aac', '.ogg']
 
-    print(msg)
-
     if (content_type == 'text'):
         HandleText(msg['text'])
 
@@ -724,7 +737,7 @@ def getNextReminder():
     return msg
 
 def remove(index):
-    subprocess.Popen(['python', 'Modules\\Todo.py', str(index), '0'])
+    subprocess.Popen(['python3', 'Modules/Todo.py', str(index), '0'])
     return 
 
 def handleEvents():
@@ -744,6 +757,7 @@ def main():
     bot.message_loop(handle)
 
     while True:
+        time.sleep(20)
         handleEvents()
         
 main()
