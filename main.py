@@ -24,6 +24,23 @@ def playAudio(msg):
 
     os.system(dir)
 
+def askReleases(msg):
+
+    msg = msg.lower()
+
+    if 'ask releases ' in msg:
+        msg = msg.replace('ask releases ', '')
+    if 'ask release ' in msg:
+        msg = msg.replace('ask release ', '')
+
+    print(msg)
+    answer = subprocess.check_output(['python', 'Modules\\Releases.py', msg])
+    answer = str(answer, 'utf-8')
+    answer = answer.replace('$' , '\n')
+
+    sendMessage(answer)
+    
+
 def askComic(msg):
     msg = msg.lower()
     if 'jl8' in msg:
@@ -639,7 +656,7 @@ def askPi(msg):
             sendMessage('Done!')
 
 def getModule(msg):
-    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic']
+    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic', 'release']
     
     for module in modules:
         if module in msg.lower():
@@ -672,6 +689,8 @@ def HandleText(msg):
         askPi(msg)
     elif module == 'comic':
         askComic(msg)
+    elif module == 'release':
+        askReleases(msg)
 
 def handle(msg):
     global chat_id
