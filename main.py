@@ -17,6 +17,55 @@ module = 0
 bot = 0
 NO_TIME = 9999999999
 
+def createWeekPlan():
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] 
+
+    response = bot.getUpdates()
+    id = int(response[0]['update_id'])
+    id += 1
+    task = ''
+    plan = []
+    i = 0
+    dayPlan = []
+
+    while (i < 7):
+        sendMessage('Add tasks for ' + days[i] + '.')
+        while task.lower() != 'end':
+            task = getMessage(id)[0][0]
+            dayPlan.append(task)
+            id += 1
+            print(task)
+        plan.append(dayPlan[:-1])
+        dayPlan = []
+        task = ''    
+        i += 1    
+
+    string = ''
+    file = open('plan', 'w')
+
+    i = 0
+    for day in plan:
+        string = string + '--------------' + days[i] + '--------------$'
+        for task in day:
+            string = string + task + '$'
+        string = string + '\n'    
+
+    file.write(string)
+
+
+
+def getMessage(id=0):
+    if id == 0:
+        response = bot.getUpdates()
+        id = int(response[0]['update_id'])
+        id += 1
+
+    response = []
+    while not response:
+        response = bot.getUpdates(id)
+
+    return [response[0]['message']['text']],[ id]
+
 def playAudio(msg):
     dir = 'c:/Users/hussam/Desktop/' + 'audio.ogg'
     file_id = msg['voice']['file_id']
@@ -25,8 +74,14 @@ def playAudio(msg):
     os.system(dir)
 
 def askReleases(msg):
-
     msg = msg.lower()
+
+    list = getMessage()
+    id = list[1]
+    response = list[0]
+
+    print(response[0])
+    return 
 
     if 'ask releases ' in msg:
         msg = msg.replace('ask releases ', '')
@@ -39,12 +94,11 @@ def askReleases(msg):
     answer = answer.replace('$' , '\n')
 
     sendMessage(answer)
-    
 
 def askComic(msg):
     msg = msg.lower()
     if 'jl8' in msg:
-        msg = msg.replace('jl8', '')
+       msg = msg.replace('jl8', '')
 
     lst = re.findall('\d+', msg )
     if lst:
@@ -84,10 +138,7 @@ def askSleep(module, msg):
     quick_date_kbrd = {'keyboard': [['Today', 'Tomorrow']]}
     bot.sendMessage(chat_id, 'When, sir?', reply_markup=quick_date_kbrd)
 
-    response = []
-
-    while not response:
-        response = bot.getUpdates(id)
+    response = getMessage(id)[0][0]
 
     bot.sendMessage(chat_id, 'Got it.', reply_markup=hide_keyboard)
     id += 1
@@ -99,12 +150,7 @@ def askSleep(module, msg):
 
     entered_time = 0
 
-    response = []
-    
-    while not response:
-        response = bot.getUpdates(id)
-        if response :
-            entered_time = str(response[0]['message']['text'])
+    entered_time = getMessage(id)[0][0]
 
     if 'm' in entered_time:
         # am / pm
@@ -152,7 +198,7 @@ def askSleep(module, msg):
 def addNote():
     note = ''
 
-    response = bot.getUpdates()
+    response = bot.getUpdates()[0][0]
 
     id = int(response[0]['update_id'])
 
@@ -161,11 +207,7 @@ def addNote():
 
     id = id+1
     
-    while not response:
-        response = bot.getUpdates(id)
-        if response :
-            note = (response[0]['message']['text'])
-    
+    response = getMessage(id)[0][0]
 
     global module
     module = 'alfred'
@@ -179,18 +221,15 @@ def remNote():
     response = bot.getUpdates()
 
     id = int(response[0]['update_id'])
-
-    response = []
     id = id+1
-    
-    while not response:
-        response = bot.getUpdates(id)
-        if response :
-            number = (response[0]['message']['text'])
+
+    response = bot.getUpdates(id)[0][0]
 
     global module
     module = 'alfred'
     subprocess.Popen(['python3', 'Modules/Notes.py', number, '0'])
+
+    sendMessage('Reminder removed')
 
 def getNotes():
     file = open('notes.txt', 'r')
@@ -214,10 +253,7 @@ def remReminder():
     response = []
     id = id+1
     
-    while not response:
-        response = bot.getUpdates(id)
-        if response :
-            number = (response[0]['message']['text'])
+    response = getMessage(id)[0][0]
 
     global module
     module = 'alfred'
@@ -250,12 +286,8 @@ def getDateTime(id):
 
     response = []
 
-    while not response:
-        response = bot.getUpdates(id)
-        
-        if response :
-            quick_date = str(response[0]['message']['text'])
-            bot.sendMessage(chat_id, 'Got it.', reply_markup=hide_keyboard)
+    quick_date = getMessage(id)[0][0]
+    bot.sendMessage(chat_id, 'Got it.', reply_markup=hide_keyboard)
 
     if quick_date == 'No':
         return ([], [])
@@ -278,14 +310,8 @@ def getDateTime(id):
 
         id = id+1
 
-        response = []
-
-        while not response:
-            response = bot.getUpdates(id)
-
-            if response :
-                year = str(response[0]['message']['text'])
-                bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
+        year = getMessage(id)[0][0]
+        bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
 
         date[2] = int(year)
         quick_date = 'Enter Month'
@@ -300,13 +326,8 @@ def getDateTime(id):
 
         id = id+1
 
-        response = []
-
-        while not response:
-            response = bot.getUpdates(id)
-            if response :
-                month = str(response[0]['message']['text'])
-                bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
+        month = getMessage(id)[0][0]
+        bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
 
         date[1] = int(month)
         quick_date = 'Enter Date'
@@ -318,13 +339,8 @@ def getDateTime(id):
 
         id = id+1
 
-        response = []
-
-        while not response:
-            response = bot.getUpdates(id)
-            if response :
-                day = str(response[0]['message']['text'])
-                bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
+        day = getMessage(id)[0][0]
+        bot.sendMessage(chat_id, 'Got it', reply_markup=hide_keyboard)
 
         date[0] = int(day)
         
@@ -336,12 +352,7 @@ def getDateTime(id):
     id = id+1
     entered_time = 0
 
-    response = []
-    
-    while not response:
-        response = bot.getUpdates(id)
-        if response :
-            entered_time = str(response[0]['message']['text'])
+    entered_time = getMessage(id)[0][0]
 
     if 'm' in entered_time:
         # am / pm
@@ -381,10 +392,7 @@ def addReminder():
 
     id = id+1
     
-    while not response:
-        response = bot.getUpdates(id)
-        if response :
-            reminder = (response[0]['message']['text'])
+    reminder = getMessage(id)[0][0]
     
     (date, time) = getDateTime(id)
 
@@ -413,7 +421,6 @@ def openFile(msg, pre=''):
         os.system(dir)
     else:
         sendMessage(str(os.popen('python3' + ' ' + dir).read()))
-
 
 def sendMessage(msg):
     bot.sendMessage(chat_id, msg)
@@ -489,6 +496,9 @@ def askAlfred(msg):
     elif 'remove' in msg and 'note' in msg:
         remNote()
 
+    elif 'create' in msg and 'plan' in msg:
+        createWeekPlan()
+
     elif 'wake' in msg:
         askSleep('wake', msg)
 
@@ -515,7 +525,7 @@ def getAgenda():
 
     for line in agenda :
         i += 1
-        rem = line[:-13] + ' [' + changeEpochToDT(int(line[-13:-3])) + ''
+        rem = line[:-13] + ' [' + changeEpochToDT(int(line[-13:-3])) + ']'
         sendMessage(str(i) + '. ' + rem)
     
 def askImdb(msg):
@@ -776,7 +786,7 @@ def main():
     bot.message_loop(handle)
 
     while True:
-        time.sleep(20)
+        time.sleep(10)
         handleEvents()
         
 main()
