@@ -34,7 +34,7 @@ def askReleases(msg):
         msg = msg.replace('ask release ', '')
 
     print(msg)
-    answer = subprocess.check_output(['python', 'Modules\\Releases.py', msg])
+    answer = subprocess.check_output(['python3', 'Modules/Releases.py', msg])
     answer = str(answer, 'utf-8')
     answer = answer.replace('$' , '\n')
 
