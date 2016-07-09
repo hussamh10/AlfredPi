@@ -1,6 +1,13 @@
+#TODO make a new courses for testing
+#TODO test the alert for class
+#TODO test makeup class
+#TODO make assignment and quiz alerter
+
 #TODO change dir in openFile
 #TODO sendPhoto in askComic
 
+import Planner
+import pickle
 import datetime
 import pprint
 import sys
@@ -11,11 +18,232 @@ import re
 import time
 import os
 import urllib.request
+import parser
 
 chat_id = 0
 module = 0
 bot = 0
 NO_TIME = 9999999999
+
+def askPlanner (msg):
+    msg = msg.lower()
+    if 'add' in msg and 'course' in msg:
+        addCourse(msg)
+    elif 'add' in msg and ('assignment' in msg or 'quiz' in msg):
+        addAssignmentQuiz(msg)
+    elif ('view' in msg or 'show' in msg) and ('assignment' in msg or 'quiz' in msg):
+        getAssignment(msg)
+    elif 'add' in msg and 'makeup' in msg:
+        addMakeupClass(msg)
+
+
+def addMakeupClass(msg):
+    response = bot.getUpdates()
+    id = int(response[0]['update_id']) + 1
+
+    course_name = ''
+
+    if 'for' in msg:
+        msg = msg.split()
+        course_name = msg[-1]
+    else :
+        sendMessage('Enter the name of course')
+        course_name = getMessage(id)[0][0]
+        id+=1
+    
+    cl = getCourseList()
+    course = 0
+    
+    sendMessage('Enter the date and time for class')
+    [date, time] = getDateTime(id)
+    id+=1
+    epoch = changeToEpoch(date, time)
+    
+    for c in cl:
+        if c.name == course_name:
+            c.addMakeupClass(epoch)
+
+def addCourseList(new_course):
+    #course_list = getCourseList()
+    course_list = []
+    course_list.append(new_course)
+    file = open(b'courses.obj', 'wb')
+    pickle.dump(course_list, file)
+    file.close()
+
+def dumpCourseList(course_list):
+    file = open(b'courses.obj', 'wb')
+    pickle.dump(course_list, file)
+    file.close()
+
+def getCourseList():
+    file = open(b'courses.obj', 'rb')
+    file.seek(0)
+    course_list = pickle.load(file)
+    file.close()
+    return course_list
+
+def addCourse(msg):
+
+    if 'ask planner ' in msg:
+        msg = msg.replace('ask planner ', '')
+    if 'add course ' in msg:
+        msg = msg.replace('add course ', '')
+
+    sendMessage('Enter name of the course')
+
+    response = bot.getUpdates()
+    id = int(response[0]['update_id']) + 1
+    name = getMessage(id)[0][0]
+    id+=1
+
+    sendMessage(name + ' added.')
+
+    new_course = Planner.course(name) # 'Maths'
+
+    sendMessage('Add the date and time of the first class')
+    [date, time] = getDateTime(id)
+    id+=1
+
+    epoch_first_class = changeToEpoch(date, time)
+
+    sendMessage('Add the date and time of the second class')
+    [date, time] = getDateTime(id)
+    id+=1
+
+    epoch_second_class = changeToEpoch(date, time)
+    
+    new_course.setSchedule(epoch_first_class, epoch_second_class)
+
+    addCourseList(new_course)
+
+def getAssignmentQuiz(msg):
+
+    course_name = ''
+    response = bot.getUpdates()
+    id = int(response[0]['update_id']) + 1
+
+    if 'for' in msg:
+        msg = msg.split()
+        course_name = msg[-1]
+    else :
+        sendMessage('Enter name of course.')
+        course_name = getMessage(id)[0][0]
+        id+=1
+    
+    course_list = getCourseList()
+
+    for course in course_list:
+        if 'assign' in msg.lower():
+            sendMessage(course.getAssignments())
+        if 'quiz' in msg.lower():
+            sendMessage(course.getQuizzes())
+    
+def addAssignmentQuiz(msg):
+
+    response = bot.getUpdates()
+    id = int(response[0]['update_id']) + 1
+
+    course_name = 0
+    course_index = 0
+
+    if 'for' in msg:
+        msg = msg.split()
+        course_name = msg[-1]
+    else :
+        sendMessage('Enter name of course.')
+        course_name = getMessage(id)[0][0]
+        id+=1
+    
+    course_list = getCourseList()
+    courses = ''
+    for c in course_list:
+        courses += c.name + '\n'
+        if c.name == course_name:
+            break
+        course_index += 1
+
+    if (course_index > len(course_list) ):
+        sendMessage('No such courses found. \nAvailable courses are \n' + courses)
+        return
+
+    sendMessage('Add Description')
+    description = getMessage(id)[0][0]
+
+    sendMessage('Add the deadline')
+    [date, time] = getDateTime(id)
+    id+=1
+
+    epoch = changeToEpoch(date, time)
+
+    if 'assign' in msg.lower():
+        course_list[course_index].addAssignment(description, epoch)
+    elif 'quiz' in msg.lower():
+        course_list[course_index].addQuiz(description, epoch)
+    
+    dumpCourseList(course_list)
+
+    # EXTRA
+
+def askCalc(msg):
+    
+    if 'ask calc ' in msg:
+        msg = msg.replace('ask calc ', '')
+
+    from math import sin
+    from math import tan
+    from math import cos
+    from math import sqrt
+    from math import log
+    from math import pow
+
+    expression = msg
+
+    code = parser.expr(expression).compile()
+    answer = eval(msg)
+    sendMessage(str(answer))
+
+def showPlan(day=-1):
+    
+    file = open('plan', 'r')
+    plan = file.readlines()
+
+    if day == -1:
+        for task in plan:
+            task = task.replace('$', '\n')
+            sendMessage(task)
+    else:
+        task = plan([day]).replace('$', '\n')
+        sendMessage(task)
+    file.close() 
+
+def addDayPlan(msg):
+    days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] 
+    day = 0
+
+    while day < 7:
+        if days[day] in msg:
+            break
+        day += 1
+
+    sendMessage('What task would you like to add?')
+    response = bot.getUpdates()
+    id = int(response[0]['update_id'])
+    id += 1
+    msg = getMessage(id)[0][0]
+
+    file = open('plan', 'r')
+    plan = file.readlines()
+
+    plan[day] = plan[day] + '$' + msg
+
+    string = ''
+    for task in plan:
+        string = string + task
+
+    file.write(string)
+    file.close() 
+
 
 def createWeekPlan():
     days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] 
@@ -49,10 +277,10 @@ def createWeekPlan():
         for task in day:
             string = string + task + '$'
         string = string + '\n'    
+        i += 1
 
     file.write(string)
-
-
+    file.close() 
 
 def getMessage(id=0):
     if id == 0:
@@ -241,6 +469,7 @@ def getNotes():
         i += 1
         line = line.replace('$', '\n')
         sendMessage(str(i) + '. ' + line)
+    file.close() 
 
 def remReminder():
     getAgenda()
@@ -472,37 +701,30 @@ def askAlfred(msg):
         answer = subprocess.check_output(['python', 'Modules\\Alfred.py', str(arg)])
         answer = str(answer, 'utf-8')
         sendMessage (answer)
-
     elif 'rps' in msg or 'rock' in msg:
         arg = 2
-
     elif 'agenda' in msg:
         getAgenda()
-
-    elif 'note' and 'show' in msg:
+    elif 'note' in msg and 'show' in msg:
         getNotes()
-
     elif 'add' in msg and 'reminder' in msg:
         addReminder()
-    
     elif 'remove' in msg and 'reminder' in msg:
         remReminder()
-
     elif 'add' in msg and 'note' in msg:
         addNote()
-
     elif 'remove' in msg and 'note' in msg:
         remNote()
-
+    elif 'add' in msg and 'plan' in msg:
+        addDayPlan(msg) 
     elif 'create' in msg and 'plan' in msg:
         createWeekPlan()
-
+    elif 'show' in msg and 'plan' in msg:
+        showPlan()
     elif 'wake' in msg:
         askSleep('wake', msg)
-
     elif 'sleep' in msg:
         askSleep('sleep', msg)
-
     elif '?' in msg:
         sendMessage('How may I assist you, sir?')
 
@@ -525,6 +747,7 @@ def getAgenda():
         i += 1
         rem = line[:-13] + ' [' + changeEpochToDT(int(line[-13:-3])) + ']'
         sendMessage(str(i) + '. ' + rem)
+    file.close() 
     
 def askImdb(msg):
     msg = msg.lower()
@@ -666,7 +889,7 @@ def askPi(msg):
             sendMessage('Done!')
 
 def getModule(msg):
-    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic', 'release']
+    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic', 'release', 'calc', 'planner']
     
     for module in modules:
         if module in msg.lower():
@@ -701,6 +924,10 @@ def HandleText(msg):
         askComic(msg)
     elif module == 'release':
         askReleases(msg)
+    elif module == 'calc':
+        askCalc(msg)
+    elif module == 'planner':
+        askPlanner(msg)
 
 def handle(msg):
     global chat_id
@@ -748,30 +975,43 @@ def getNextReminder():
             min_i = i
             
     msg = {'time': min, 'message': agenda[min_i-1][:-13], 'index':min_i }
+    file.close() 
     return msg
 
-def remove(index):
+def removeReminder(index):
     subprocess.Popen(['python', 'Modules\\Todo.py', str(index), '0'])
     return 
 
-def handleEvents():
+def handleEvents(course):
     now = time.time()
-    msg = getNextReminder()
-    if not msg or msg['time'] == 9999999999:
+    reminder = getNextReminder()
+    if not reminder or reminder['time'] == 9999999999:
         return 
 
-    if msg['time'] < now:
-        sendMessage(msg['message'])
-        remove(msg['index'])
+    if reminder['time'] < now:
+        sendMessage(reminder['message'])
+        removeReminder(remnder['index'])
+    
+    for course in courses:
+        if (course.getClass() - now) < 3600:
+            sendMesssage(course.name + ' class in less than an hour.')
+            course.removeClass()
 
 def main(): 
     global bot
 
     bot = telepot.Bot('232702502:AAFEUh-lDo1vb641bOJ_fJ2ar-LsVM0zeO4')
     bot.message_loop(handle)
+    counter = 0
+    courses = []
 
     while True:
         time.sleep(10)
-        handleEvents()
+        handleEvents(courses)
+
+        counter += 1
+        if counter == 60:
+            courses = getCourseList()
+
         
 main()

@@ -6,14 +6,10 @@ def getUrl():
     url1 = 'https://www.w3.org/services/html2txt?url=https://www.google.com.pk/search?q='
     url2 = '&rlz=1C1NHXL_enPK684PK684&aqs=chrome..69i57.21011j0j1&sourceid=chrome&ie=UTF-8#'
     
-    arg_count = len(sys.argv) - 1
-    string = ''
+    arg = sys.argv[-1]
+    arg = arg.replace(' ', '')
 
-    for i in range(0, arg_count):
-        string = string + '+' + sys.argv[i+1]
-    string = string[1:]
-        
-    url = url1+string+url2
+    url = url1+arg+url2
     return url
 
 def main():
