@@ -25,6 +25,45 @@ module = 0
 bot = 0
 NO_TIME = 9999999999
 
+def addBookmark(msg):
+    file = open('bookmarks', 'a')
+    file.write(msg + '\n')
+
+def remBookmark():
+
+    str_bookmark = getBookmarks()
+    sendMessage("Which bookmark do you want to remove?")
+
+    response = bot.getUpdates()
+    id = int(response[0]['update_id'])
+    id = id+1
+
+    index = getMessage(id)[0][0]
+
+    file = open('bookmark', 'w')
+    i = 1
+    
+    for line in cont:
+        if i == int(index):
+            i += 1
+            continue
+        else:
+            i += 1
+            file.write(line)
+
+def getBookmarks():
+    file = open('bookmarks', 'r')
+    bookmarks = file.readlines()
+    i = 1
+    str_bookmark = ''
+
+    for bookmark in bookmarks:
+        str_bookmark += str(i) + ' ' + bookmark + '\n'
+        i+=1
+
+    sendMessage(str_bookmark, disable_web_page_preview=True)
+    return str_bookmark
+
 def askPlanner (msg):
     msg = msg.lower()
     if 'add' in msg and 'course' in msg:
@@ -95,7 +134,6 @@ def addCourse(msg):
     response = bot.getUpdates()
     id = int(response[0]['update_id']) + 1
     name = getMessage(id)[0][0]
-    id+=1
 
     sendMessage(name + ' added.')
 
@@ -106,7 +144,9 @@ def addCourse(msg):
     id+=1
 
     epoch_first_class = changeToEpoch(date, time)
+    print(epoch_first_class)
 
+    id+= 1
     sendMessage('Add the date and time of the second class')
     [date, time] = getDateTime(id)
     id+=1
@@ -426,7 +466,7 @@ def askSleep(module, msg):
 def addNote():
     note = ''
 
-    response = bot.getUpdates()[0][0]
+    response = bot.getUpdates()
 
     id = int(response[0]['update_id'])
 
@@ -435,7 +475,7 @@ def addNote():
 
     id = id+1
     
-    response = getMessage(id)[0][0]
+    note = getMessage(id)[0][0]
 
     global module
     module = 'alfred'
@@ -451,13 +491,13 @@ def remNote():
     id = int(response[0]['update_id'])
     id = id+1
 
-    response = bot.getUpdates(id)[0][0]
+    number = getMessage(id)[0][0]
 
     global module
     module = 'alfred'
     subprocess.Popen(['python', 'Modules\\Notes.py', number, '0'])
 
-    sendMessage('Reminder removed')
+    sendMessage('Note removed')
 
 def getNotes():
     file = open('notes.txt', 'r')
@@ -650,8 +690,8 @@ def openFile(msg, pre=''):
     else:
         sendMessage(str(os.popen('python' + ' ' + dir).read()))
 
-def sendMessage(msg):
-    bot.sendMessage(chat_id, msg)
+def sendMessage(msg, disable_web_page_preview=False):
+    bot.sendMessage(chat_id, msg, disable_web_page_preview = disable_web_page_preview)
     return
 
 def chatAction(msg):
@@ -689,9 +729,8 @@ def askWolfram(msg):
 
     answer = subprocess.check_output(['python', 'Modules\\Wolfram.py', msg])
     answer = getStrFromList(answer)
-
-    
-    print (answer)
+    for image in answer:
+        sendMessage(image)
 
 def askAlfred(msg):
     global module
@@ -725,6 +764,11 @@ def askAlfred(msg):
         askSleep('wake', msg)
     elif 'sleep' in msg:
         askSleep('sleep', msg)
+    elif 'bookmark' in msg:
+        if 'remove' in msg:
+            remBookmark()
+        elif 'show' in msg or 'view'in msg:
+            getBookmarks()
     elif '?' in msg:
         sendMessage('How may I assist you, sir?')
 
@@ -829,7 +873,7 @@ def askGoogle(msg):
     for line in answer:
         draft = draft + '\n' +  line
 
-    sendMessage(url + '\n' )
+    sendMessage(url + '\n' , disable_web_page_preview = True)
     sendMessage(draft)
     
 def askReddit(msg):
@@ -884,7 +928,7 @@ def askPi(msg):
         # TODO remove URL links
 
         if out:
-            sendMessage(out)
+            sendMessage(out, disable_web_page_preview)
         else:
             sendMessage('Done!')
 
@@ -935,7 +979,10 @@ def handle(msg):
     music_formats = ['.mp3', '.wav', '.wma', '.flac', '.3ga', '.m4a', '.aac', '.ogg']
 
     if (content_type == 'text'):
-        HandleText(msg['text'])
+        if ('https' in msg['text'] or 'www.' in msg['text']):
+            addBookmark(msg['text'])
+        else :
+            HandleText(msg['text'])
 
     if (content_type == 'voice'):
         playAudio(msg)

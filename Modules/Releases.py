@@ -51,6 +51,8 @@ def main():
     main_url = 'http://www.releases.com/search?q=' 
     url = main_url + ext
 
+    print(url)
+
     product_url = getProductURL(url)
 
     getStats(product_url)
