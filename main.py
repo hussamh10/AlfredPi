@@ -25,6 +25,12 @@ module = 0
 bot = 0
 NO_TIME = 9999999999
 
+def getAtHome(at_home):
+    
+    check_if_at_
+
+
+
 def addBookmark(msg):
     file = open('bookmarks', 'a')
     file.write(msg + '\n')
@@ -518,15 +524,26 @@ def remReminder():
     response = bot.getUpdates()
 
     id = int(response[0]['update_id'])
-
-    response = []
     id = id+1
-    
-    response = getMessage(id)[0][0]
+
+    number = ''
+    removeList = []
+
+    while(True):
+        number = getMessage(id)[0][0]
+        id = id+1
+        if ('end' in number.lower()):
+            break
+        removeList.append(number)
+
+    i = 0
+    for number in removeList:
+        n = int(number) - i
+        i += 1
+        subprocess.Popen(['python', 'Modules\\Todo.py', str(n), '0'])
 
     global module
     module = 'alfred'
-    subprocess.Popen(['python', 'Modules\\Todo.py', number, '0'])
 
 def changeToEpoch(date, time):
     if not date:
@@ -1046,6 +1063,8 @@ def handleEvents(course):
 
 def main(): 
     global bot
+
+    at_home = False
 
     bot = telepot.Bot('232702502:AAFEUh-lDo1vb641bOJ_fJ2ar-LsVM0zeO4')
     bot.message_loop(handle)
