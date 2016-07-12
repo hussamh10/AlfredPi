@@ -343,13 +343,21 @@ def playAudio(msg):
     os.system(dir)
 
 def askReleases(msg):
-
     msg = msg.lower()
+
+    list = getMessage()
+    id = list[1]
+    response = list[0]
+
+    print(response[0])
+    return 
+
     if 'ask releases ' in msg:
         msg = msg.replace('ask releases ', '')
     if 'ask release ' in msg:
         msg = msg.replace('ask release ', '')
 
+    print(msg)
     answer = subprocess.check_output(['python3', 'Modules/Releases.py', msg])
     answer = str(answer, 'utf-8')
     answer = answer.replace('$' , '\n')
@@ -484,16 +492,14 @@ def remNote():
 
     id = int(response[0]['update_id'])
     id = id+1
-    number = ''
 
-    while('end' not in number):
-        number = getMessage(id)[0][0]
-        id = id+1
-        subprocess.Popen(['python3', 'Modules/Notes.py', number, '0'])
+    number = getMessage(id)[0][0]
 
-    sendMessage('The reminders has been removed, sir.')
     global module
     module = 'alfred'
+    subprocess.Popen(['python3', 'Modules/Notes.py', number, '0'])
+
+    sendMessage('Note removed')
 
 def getNotes():
     file = open('notes.txt', 'r')
@@ -515,29 +521,14 @@ def remReminder():
 
     id = int(response[0]['update_id'])
 
-    number = ''
+    response = []
     id = id+1
-
-    removeList = []
     
-    while(True):
-        number = getMessage(id)[0][0]
-        if ('end' in number.lower()):
-            break
-        id = id+1
-        removeList.append(number)
+    response = getMessage(id)[0][0]
 
-    removeList.sort()
-    i = 0
-
-    for number in removeList:
-        n = int(number) - i
-        i += 1
-        subprocess.Popen(['python3', 'Modules/Todo.py', str(n), '0'])
-
-    sendMessage('The reminders has been removed, sir.')
     global module
     module = 'alfred'
+    subprocess.Popen(['python3', 'Modules/Todo.py', number, '0'])
 
 def changeToEpoch(date, time):
     if not date:
@@ -1070,7 +1061,7 @@ def handleEvents(courses):
     
     for course in courses:
         if (course.getClass() - now) < 3600:
-            sendMessage(course.name + ' class in less than an hour.')
+            sendMesssage(course.name + ' class in less than an hour.')
             course.removeClass()
 
 def main(): 
