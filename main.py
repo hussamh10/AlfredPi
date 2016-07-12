@@ -25,11 +25,12 @@ module = 0
 bot = 0
 NO_TIME = 9999999999
 
-def getAtHome(at_home):
-    
-    check_if_at_
-
-
+def askNetwork()
+    out = subprocess.check_output(['python3', 'Modules\\network.py'])
+    if 'hussam' in out:
+        sendMessage('You are at home, sir.')
+    if 'mama' in out:
+        sendMessage('Your mother is at home, sir')
 
 def addBookmark(msg):
     file = open('bookmarks', 'a')
@@ -781,6 +782,8 @@ def askAlfred(msg):
         askSleep('wake', msg)
     elif 'sleep' in msg:
         askSleep('sleep', msg)
+    elif 'who' in msg and 'home' in msg:
+        askNetwork()
     elif 'bookmark' in msg:
         if 'remove' in msg:
             remBookmark()
