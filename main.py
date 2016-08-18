@@ -3,9 +3,6 @@
 #TODO test makeup class
 #TODO make assignment and quiz alerter
 
-#TODO change dir in openFile
-#TODO sendPhoto in askComic
-
 import Planner
 import pickle
 import datetime
@@ -24,6 +21,17 @@ chat_id = 0
 module = 0
 bot = 0
 NO_TIME = 9999999999
+
+def askNetwork(msg):
+    deep = False
+    if 'deep' in msg:
+        deep = True
+    if not deep:
+        sendMessage('Please wait a moment (for a deep search next time add deep at the end)')
+    out = subprocess.check_output(['python3', 'Modules/Network.py', str(deep)])
+    out = str(out, 'utf-8')
+    out = "Connected devices: \n" + out
+    sendMessage(out)
 
 def addBookmark(msg):
     file = open('bookmarks', 'a')
@@ -336,11 +344,11 @@ def getMessage(id=0):
     return [response[0]['message']['text']],[ id]
 
 def playAudio(msg):
-    dir = 'c:/Users/hussam/Desktop/' + 'audio.ogg'
+    print(msg)
+    dir = 'audio.ogg'
     file_id = msg['voice']['file_id']
-    #bot.download_file(file_id, dir)
-
-    os.system(dir)
+    bot.download_file(file_id, dir)
+    subprocess.Popen(["omxplayer", "audio.ogg"])
 
 def askReleases(msg):
 
@@ -350,6 +358,7 @@ def askReleases(msg):
     if 'ask release ' in msg:
         msg = msg.replace('ask release ', '')
 
+    chatAction('typing')
     answer = subprocess.check_output(['python3', 'Modules/Releases.py', msg])
     answer = str(answer, 'utf-8')
     answer = answer.replace('$' , '\n')
@@ -514,7 +523,6 @@ def remReminder():
     response = bot.getUpdates()
 
     id = int(response[0]['update_id'])
-
     number = ''
     id = id+1
 
@@ -544,7 +552,7 @@ def changeToEpoch(date, time):
         return 9999999999.0
 
     epoch = datetime.datetime(date[2], date[1], date[0], time[0], time[1]).timestamp()
-    epoch = epoch - 10800
+    epoch = epoch - 18000
     return epoch
 
 def getDateTime(id):
@@ -573,13 +581,13 @@ def getDateTime(id):
         return ([], [])
 
     if (quick_date == 'Today'):
-        today = datetime.datetime.now()
+        today = datetime.datetime.now() + datetime.timedelta(hours = 5)
         date[0] = today.day
         date[1] = today.month
         date[2] = today.year
 
     if (quick_date == 'Tomorrow'):
-        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1) + datetime.timedelta(hours = 5)
         date[0] = tomorrow.day
         date[1] = tomorrow.month
         date[2] = tomorrow.year
@@ -689,11 +697,11 @@ def addReminder():
 def openFile(msg, pre=''):
     file_name = msg['document']['file_name']
     file_id = msg['document']['file_id']
-    dir = 'c:/Users/hussam/Desktop/' + file_name
+    dir = file_name
 
     print('there')
 
-    #TODO bot.download_file(file_id, dir)
+    bot.download_file(file_id, dir)
 
     print('here')
 
@@ -741,8 +749,20 @@ def askWolfram(msg):
 
     answer = subprocess.check_output(['python3', 'Modules/Wolfram.py', msg])
     answer = getStrFromList(answer)
+
+    import urllib.request
+    import io
+
     for image in answer:
-        sendMessage(image)
+        image = str(image + ".png")
+
+        file = open('temp.png', 'wb')
+        file.write(urllib.request.urlopen(image).read())
+        file.close()
+
+        file = open("temp.png", 'rb')
+        
+        bot.sendPhoto(chat_id, file)
 
 def askAlfred(msg):
     global module
@@ -757,8 +777,6 @@ def askAlfred(msg):
         arg = 2
     elif 'agenda' in msg:
         getAgenda()
-    elif 'note' in msg and'show' in msg:
-        getNotes()
     elif 'note' in msg and 'show' in msg:
         getNotes()
     elif 'add' in msg and 'reminder' in msg:
@@ -779,6 +797,8 @@ def askAlfred(msg):
         askSleep('wake', msg)
     elif 'sleep' in msg:
         askSleep('sleep', msg)
+    elif 'who' in msg and 'home' in msg:
+        askNetwork(msg)
     elif 'bookmark' in msg:
         if 'remove' in msg:
             remBookmark()
@@ -815,6 +835,7 @@ def askImdb(msg):
     if ('ask imdb ' in msg):
         msg.replace('ask imdb ', '')
 
+    chatAction('typing')
     answer = subprocess.check_output(['python3', 'Modules/IMDB.py', msg])
     answer = getStrFromList(answer)
     
@@ -932,6 +953,10 @@ def askReddit(msg):
     for post in posts:
         sendMessage(post[0] + '\n - \n' + post[1])
 
+
+def speak(msg):
+    subprocess.Popen(['espeak', msg])
+
 def askPi(msg):
     if 'temp' in msg:
         temp = subprocess.check_output(['bash', 'temp.sh'])
@@ -939,9 +964,20 @@ def askPi(msg):
         print(temp)
         sendMessage(temp)
 
+    elif 'say' in msg:
+        msg = msg.replace('ask pi say ', '')
+        msg = msg.replace('Ask pi say ', '')
+        msg = msg.replace('say ', '')
+        msg = msg.replace('Say ', '')
+
+        speak(msg)
+
+
     elif 'shell' in msg:
         msg = msg.replace('ask pi shell ', '')
+        msg = msg.replace('Ask pi shell ', '')
         msg = msg.replace('shell ', '')
+        msg = msg.replace('Shell ', '')
 
         if ('rm ' in msg):
             sendMessage ('Sorry Dave, I can\'t do that.')
@@ -957,7 +993,7 @@ def askPi(msg):
         # TODO remove URL links
 
         if out:
-            sendMessage(out, disable_web_page_preview)
+            sendMessage(out, disable_web_page_preview = True)
         else:
             sendMessage('Done!')
 
@@ -1002,7 +1038,22 @@ def HandleText(msg):
     elif module == 'planner':
         askPlanner(msg)
 
+def playMusicFile(msg):
+
+    file_name = msg['audio']['title']
+    file_id = msg['audio']['file_id']
+    dir = file_name
+
+    print('there')
+
+    bot.download_file(file_id, dir)
+
+    subprocess.Popen(["omxplayer", file_name])
+
 def handle(msg):
+
+    print(msg)
+
     global chat_id
     content_type, chat_type, chat_id = telepot.glance(msg)
     music_formats = ['.mp3', '.wav', '.wma', '.flac', '.3ga', '.m4a', '.aac', '.ogg']
@@ -1014,10 +1065,17 @@ def handle(msg):
             HandleText(msg['text'])
 
     if (content_type == 'voice'):
+        print("Audio")
         playAudio(msg)
 
     if (content_type == 'photo'):
+        testPhoto()
         pass
+
+    if content_type == 'audio':
+        print('mhm')
+        playMusicFile(msg)
+
 
     if (content_type == 'document'):
         if '.torrent' in msg['document']['file_name']:
@@ -1026,11 +1084,6 @@ def handle(msg):
         if '.py' in msg['document']['file_name']:
             openFile(msg, pre='python3')
 
-        else:
-            for format in music_formats:
-                if format in msg['document']['file_name']:
-                    openFile(msg)
-        
 def getNextReminder():
     file = open('todo.txt', 'r')
     agenda = file.readlines()
@@ -1068,13 +1121,15 @@ def handleEvents(courses):
         sendMessage(reminder['message'])
         removeReminder(reminder['index'])
     
-    for course in courses:
-        if (course.getClass() - now) < 3600:
-            sendMessage(course.name + ' class in less than an hour.')
-            course.removeClass()
+   # for course in courses:
+    #    if (course.getClass() - now) < 3600:
+     #       sendMessage(course.name + ' class in less than an hour.')
+      #      course.removeClass()
 
 def main(): 
     global bot
+
+    at_home = False
 
     bot = telepot.Bot('232702502:AAFEUh-lDo1vb641bOJ_fJ2ar-LsVM0zeO4')
     bot.message_loop(handle)
@@ -1085,8 +1140,8 @@ def main():
         time.sleep(10)
         handleEvents(courses)
 
-        counter += 1
-        if counter == 60:
-            courses = getCourseList()
+        #counter += 1
+        #if counter == 60:
+         #   courses = getCourseList()
         
 main()

@@ -1,3 +1,0 @@
-Mr Robot S2 premier. 1468366200.0
-Fix Rpi time. 9999999999.0
-Add typing... to IMDB and Releases. 9999999999.0
