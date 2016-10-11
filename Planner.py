@@ -7,6 +7,7 @@ class course():
         self.assignments = []
         self.quizzes = []
         self.name = name
+        self.absents = 0
 
     def setSchedule(self, first_epoch, second_epoch):
         i = 0
@@ -26,6 +27,12 @@ class course():
     def addMakeup(self, epoch):
         self.times.append(epoch)
         self.times.sort()
+
+    def addAbsent(self):
+        self.absents+=1
+
+    def getAbsents(self):
+        return self.absents
 
     def getClass(self):
         return self.times[0]

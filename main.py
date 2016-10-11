@@ -3,6 +3,7 @@
 #TODO test makeup class
 #TODO make assignment and quiz alerter
 
+import Youtube
 import Planner
 import pickle
 import datetime
@@ -17,6 +18,7 @@ import os
 import urllib.request
 import parser
 
+alarm_time = 0
 chat_id = 0
 module = 0
 bot = 0
@@ -76,10 +78,18 @@ def askPlanner (msg):
     msg = msg.lower()
     if 'add' in msg and 'course' in msg:
         addCourse(msg)
+    elif 'sss' in msg:
+        c = getCourseList()
+        for co in c:
+            sendMessage(str(co.name))
     elif 'add' in msg and ('assignment' in msg or 'quiz' in msg):
         addAssignmentQuiz(msg)
     elif ('view' in msg or 'show' in msg) and ('assignment' in msg or 'quiz' in msg):
         getAssignmentQuiz(msg)
+    elif ('view' in msg and 'absent' in msg):
+        getAbsents(msg)
+    elif ('add' in msg and 'absent' in msg):
+        addAbsents(msg)
     elif 'add' in msg and 'makeup' in msg:
         addMakeupClass(msg)
 
@@ -129,6 +139,26 @@ def getCourseList():
     course_list = pickle.load(file)
     file.close()
     return course_list
+
+def addAbsents(msg):
+    
+    course_list = getCourseList()
+    
+    sendMessage('Enter name of course.')
+    course_name = getMessage(id)[0][0]
+    id+=1
+
+    for course in course_list:
+        if course.name == course_name:
+            course.addAbsent()
+    
+def getAbsents(msg):
+
+    course_list = getCourseList()
+    
+    for course in course_list:
+        sendMessage(course.name + " ", str(course.addAbsent()))
+    
 
 def addCourse(msg):
 
@@ -348,7 +378,7 @@ def playAudio(msg):
     dir = 'audio.ogg'
     file_id = msg['voice']['file_id']
     bot.download_file(file_id, dir)
-    subprocess.Popen(["omxplayer", "audio.ogg"])
+    subprocess.Popen(["omxplayer", "-o", "local", "audio.ogg"])
 
 def askReleases(msg):
 
@@ -915,6 +945,43 @@ def askGoogle(msg):
 
     sendMessage(url + '\n' , disable_web_page_preview = True)
     sendMessage(draft)
+
+
+def setAlarm():
+    response = bot.getUpdates()
+    id = int(response[0]['update_id'])
+
+    response = []
+    sendMessage('When would you like to set the alarm for, sir?')
+    #id = id+1
+    #reminder = getMessage(id)[0][0]
+    
+    (date, time) = getDateTime(id)
+    epoch = changeToEpoch(date, time)
+    
+    return epoch
+    
+def killAlarm():
+    pid = subprocess.check_output(['pidof', 'omxplayer.bin'])
+    pid = str(pid, 'utf-8')
+    pid = pid[0]
+    pid = subprocess.check_output(['kill',pid])
+
+def startAlarm():
+    print("AHAN")
+    subprocess.Popen(['omxplayer', 'alarm.mp3'])
+
+def askAlarm(msg):
+    msg = msg.lower()
+
+    global alarm_time
+
+    if 'add' in msg:
+        alarm_time = setAlarm()
+        print(alarm_time)
+    elif ('stop' in msg):
+        alarm_time = 0
+        killAlarm()
     
 def askReddit(msg):
     msg = msg.lower()
@@ -970,7 +1037,7 @@ def askPi(msg):
         msg = msg.replace('say ', '')
         msg = msg.replace('Say ', '')
 
-        speak(msg)
+        #speak(msg)
 
 
     elif 'shell' in msg:
@@ -998,12 +1065,42 @@ def askPi(msg):
             sendMessage('Done!')
 
 def getModule(msg):
-    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic', 'release', 'calc', 'planner']
+    modules = ['reddit', 'google', 'wikipedia', 'wiki', 'alfred', 'wolfram', 'imdb', 'pi', 'comic', 'release', 'calc', 'planner', 'attendance', 'alarm']
     
     for module in modules:
         if module in msg.lower():
             return module
     return 0
+
+def askAttendance(msg):
+    response = bot.getUpdates()
+    id = int(response[0]['update_id']) + 1
+    
+    file = open('attendance', 'r')
+    lines = file.readlines()
+
+    out = ""
+
+    if ('show' in msg.lower() ):
+        for line in lines:
+            sendMessage(line)
+
+
+    if ('add' in msg.lower()):
+        sendMessage('Enter the name of course')
+        course_name = getMessage(id)[0][0]
+        id+=1
+        for line in lines:
+            if course_name in line:
+                att = (str(int(line[-2]) + 1))
+                line = line[:-2] + att + "\n"
+            out += line
+
+        file.close()
+        file = open('attendance', 'w')
+
+        file.write(out)
+    file.close()
 
 def HandleText(msg):
     global module
@@ -1037,6 +1134,13 @@ def HandleText(msg):
         askCalc(msg)
     elif module == 'planner':
         askPlanner(msg)
+    elif module == 'attendance':
+        askAttendance(msg)
+    elif module == 'alarm':
+        askAlarm(msg)
+
+def playYoutube(url):
+    Youtube.playURL(url, 'both')
 
 def playMusicFile(msg):
 
@@ -1059,8 +1163,9 @@ def handle(msg):
     music_formats = ['.mp3', '.wav', '.wma', '.flac', '.3ga', '.m4a', '.aac', '.ogg']
 
     if (content_type == 'text'):
-        if ('https' in msg['text'] or 'www.' in msg['text']):
-            addBookmark(msg['text'])
+        if ('https://youtu' in msg['text'] or 'https://www.youtube' in msg['text']):
+            sendMessage("Playing video...")
+            playYoutube(msg['text'])
         else :
             HandleText(msg['text'])
 
@@ -1114,14 +1219,19 @@ def removeReminder(index):
 def handleEvents(courses):
     now = time.time()
     reminder = getNextReminder()
+
+    if alarm_time != 0:
+        if alarm_time < now:
+            startAlarm()
+
     if not reminder or reminder['time'] == 9999999999:
         return 
 
     if reminder['time'] < now:
         sendMessage(reminder['message'])
         removeReminder(reminder['index'])
-    
-   # for course in courses:
+
+       # for course in courses:
     #    if (course.getClass() - now) < 3600:
      #       sendMessage(course.name + ' class in less than an hour.')
       #      course.removeClass()
@@ -1138,10 +1248,12 @@ def main():
 
     while True:
         time.sleep(10)
+        print(alarm_time, " ", time.time())
         handleEvents(courses)
 
         #counter += 1
         #if counter == 60:
          #   courses = getCourseList()
         
+
 main()
