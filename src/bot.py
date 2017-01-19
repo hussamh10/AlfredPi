@@ -33,12 +33,6 @@ class Bot():
     def sendMessge(self, message):
             self.telegram.sendMessage(self.chat_id, msg)
 
-
-    def getImage(self, url):
-        request.urlretrieve(url, 'temp')
-        image = open('temp', 'r')
-        return image
-
     def sendImage(self, image):
         image = request.urlopen(image)
-        self.telegram.sendPhoto(self.chat_id, image)
+        self.telegram.sendPhoto(self.chat_id, ('photo.jpg', image))

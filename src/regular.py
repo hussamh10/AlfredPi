@@ -1,5 +1,6 @@
 import controller
 import telepot
+from Response import Response
 from state import State
 
 class Regular(State):
@@ -13,8 +14,9 @@ class Regular(State):
         module, operation = controller.parseMessage(message)
 
         response = controller.generateResponse(operation, module)
-        
+
         if response.texts:
             self.bot.sendMessages(response.texts)
         if response.images:
-            self.bot.sendMessages(response.images)
+            for image_url in response.images:
+                self.bot.sendImage(image_url)
