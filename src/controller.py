@@ -13,6 +13,7 @@ import Google
 import IMDB
 import Lyrics
 from Response import Response
+from task_module import TaskModule
 
 def toString(lst):
     string = ' '
@@ -24,6 +25,10 @@ def remove(lst, element):
     if element in lst:
         lst.remove(element)
     return lst
+
+def identifyModule(message):
+    if('ask' == message['text'].split()[0]):
+        return TaskModule()
 
 def handleReddit(operation):
     if 'joke' in operation:
@@ -39,6 +44,7 @@ def parseMessage(message):
     module = ''
     operation = []
     ask_modules = ['google', 'wikipedia', 'imdb', 'releases', 'wolfram', 'reddit']
+    add_modules = ['note', 'reminder', 'alarm']
     parsed = message.split()
     if 'lyrics' in parsed:
         module = 'lyrics'
