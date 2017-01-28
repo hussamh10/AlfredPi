@@ -14,16 +14,15 @@ def getNotes():
     file.close()
     return notes
 
-def remNote(index):
+def removeNote(index):
     file = open('notes.txt', 'r')
     notes = file.readlines()
     file.close()
-
     file = open('notes.txt', 'w')
     i = 1
 
     for line in notes:
-        if i == index:
+        if i in index:
             i += 1
             continue
         else:

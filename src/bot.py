@@ -2,31 +2,46 @@
 Bot can do the follwoing
 
 '''
+import time
 import telepot
 from urllib import request
-from regular import Regular
 import controller
 
 class Bot():
     def __init__(self, telegram):
         self.telegram = telegram
         self.chat_id = None
-        self.state = Regular(self)
+        self.message_id = 0
 
     def handle(self, message):
         self.chat_id = message['chat']['id']
+        message_id = message['message_id']
+
+        if self.message_id >= message_id:
+            return
+
+        self.message_id = message_id
 
         module = controller.identifyModule(message)
+
+        if module is None:
+            self.sendMessage('Sorry sir, I can\'t understand you')
+            return
 
         text_message = message['text']
         module.performOperation(text_message, self)
 
-    def getMessage(self, id=0):
+    def getMessage(self, id=-1):
         response = []
-        while not response:
-            response = self.telegram.getUpdates(id)
-        return response[-1]['message']
+        message = ''
+        while True:
+            response = self.telegram.getUpdates(99999999999999)
 
+            if response:
+                message_id = response[-1]['message']['message_id']
+                if message_id > self.message_id:
+                    self.message_id = message_id
+                    return response[-1]['message']
 
     def sendMessage(self, message):
         try:

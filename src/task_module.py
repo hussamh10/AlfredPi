@@ -46,7 +46,7 @@ class TaskModule(Module):
     def parseMessage(self, message):
         module = ''
         operation = []
-        ask_modules = ['google', 'wikipedia', 'imdb', 'releases', 'wolfram', 'reddit', 'lyrics']
+        ask_modules = ['google', 'wikipedia', 'imdb', 'releases', 'wolfram', 'reddit', 'lyrics', 'espeak']
         parsed = message.split()
 
         for m in ask_modules:
