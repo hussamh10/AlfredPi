@@ -9,10 +9,11 @@ import Releases
 import Google
 import IMDB
 import Lyrics
+import espeak
 
 class TaskModule(Module):
 
-    def handleReddit(operation):
+    def handleReddit(self, operation):
         if 'joke' in operation:
             return Reddit.getJoke()
         if 'hot' in operation or 'daily' in operation:
@@ -31,17 +32,25 @@ class TaskModule(Module):
         if module == 'imdb':
             response.texts = IMDB.getMovieInfo(operation)
         if module == 'releases':
-            response.texts = None
+            response.texts.append(Releases.getReleaseDate(operation))
         if module == 'lyrics':
             response.texts.append(Lyrics.getLyrics(operation))
         if module == 'reddit':
-            response.texts = handleReddit(operation)
+            response.texts = self.handleReddit(operation)
         if module == 'wolfram':
             response.images = Wolfram.getImages(operation)
+        if module == 'espeak':
+            espeak.speak(operation)
+            response.texts.append('Done, sir')
 
         if not response.texts and not response.images and not response.audios:
             response.texts = ['I\'m sorry dave, I\'m afraid I can\'t do that']
         return response
+
+    def remove(self, sub, string):
+        if string[0] == sub:
+            string.remove(sub)
+        
 
     def parseMessage(self, message):
         module = ''
@@ -53,11 +62,12 @@ class TaskModule(Module):
             if parsed[1] in m:
                 module = m
         operation = parsed[2:]
-        if operation[0] == 'about':
-            operation.remove('about')
-        if operation[0] == 'for':
-            operation.remove('for')
+        self.remove('about', operation)
+        self.remove('for', operation)
+        self.remove('to', operation)
         operation = self.toString(operation)
+
+        print('debug', module, operation)
 
         return module, operation
 
