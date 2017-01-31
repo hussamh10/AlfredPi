@@ -35,3 +35,4 @@ def getResult(query):
             result = result + '\n' + line
         i = i+1
     return result
+

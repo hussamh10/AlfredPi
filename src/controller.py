@@ -28,8 +28,8 @@ def remove(lst, element):
     return lst
 
 def identifyModule(message):
-    lst = message['text'].split()[0]
-    if('ask' == message):
+    first = message['text'].split()[0]
+    if('ask' == first):
         return TaskModule()
     chat_modules = ['note', 'remoinder', 'alarm']
     for m in chat_modules:
