@@ -10,6 +10,7 @@ import Google
 import IMDB
 import Lyrics
 import espeak
+import network
 
 class TaskModule(Module):
 
@@ -39,6 +40,8 @@ class TaskModule(Module):
             response.texts = self.handleReddit(operation)
         if module == 'wolfram':
             response.images = Wolfram.getImages(operation)
+        if module == 'network':
+            response.text = network.scan()
         if module == 'espeak':
             espeak.speak(operation)
             response.texts.append('Done, sir')
@@ -55,7 +58,7 @@ class TaskModule(Module):
     def parseMessage(self, message):
         module = ''
         operation = []
-        ask_modules = ['google', 'wikipedia', 'imdb', 'releases', 'wolfram', 'reddit', 'lyrics', 'espeak']
+        ask_modules = ['google', 'wikipedia', 'imdb', 'releases', 'wolfram', 'reddit', 'lyrics', 'espeak', 'network']
         parsed = message.split()
 
         for m in ask_modules:
