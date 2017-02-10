@@ -23,8 +23,7 @@ def getStats(url):
     soup = soup.findAll("div", attrs={"class" : " p-rl-autotext"})
 
     description = ''
-    for a in soup:
-        description += a.getText(separator=u'$')
+    description += soup[0].getText(separator=u'$')
 
     return description
 
