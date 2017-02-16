@@ -15,6 +15,7 @@ import Lyrics
 from Response import Response
 from task_module import TaskModule
 from chat_module import ChatModule
+from voice_module import VoiceModule
 
 def toString(lst):
     string = ' '
@@ -28,6 +29,8 @@ def remove(lst, element):
     return lst
 
 def identifyModule(message):
+    if('voice' in message.keys()):
+        return VoiceModule()
     first = message['text'].split()[0]
     if('ask' == first.lower()):
         return TaskModule()

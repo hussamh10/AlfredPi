@@ -32,6 +32,7 @@ class ChatModule(Module):
 
 
     def performOperation(self,message, bot):
+        message = message['text']
         module, operation = self.parseMessage(message)
         print('debug:' + module + ' ' + operation)
 

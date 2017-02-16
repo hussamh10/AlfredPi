@@ -53,7 +53,7 @@ class TaskModule(Module):
     def remove(self, sub, string):
         if string[0] == sub:
             string.remove(sub)
-        
+
 
     def parseMessage(self, message):
         module = ''
@@ -75,6 +75,7 @@ class TaskModule(Module):
         return module, operation
 
     def performOperation(self, message, bot):
+        message = message['text']
         module, operation = self.parseMessage(message)
         print('debug:' + module + operation)
         response = self.generateResponse(module, operation)

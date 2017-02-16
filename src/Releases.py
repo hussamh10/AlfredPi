@@ -44,5 +44,3 @@ def getReleaseDate(ext):
     print(product_url)
 
     return getStats(product_url)
-
-getReleaseDate("Doctor strange")

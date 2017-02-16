@@ -28,8 +28,7 @@ class Bot():
             self.sendMessage('Sorry sir, I can\'t understand you')
             return
 
-        text_message = message['text']
-        module.performOperation(text_message, self)
+        module.performOperation(message, self)
 
     def getMessage(self, id=-1):
         response = []
@@ -48,6 +47,9 @@ class Bot():
             self.telegram.sendMessage(self.chat_id, message)
         except:
             self.telegram.sendMessage(self.chat_id, 'I\'m sorry dave, I\'m afraid I can\'t do that (Error while sending)')
+
+    def download(self, id, path):
+        self.telegram.download_file(id, path)
 
     def sendImage(self, image):
         image = request.urlopen(image)
