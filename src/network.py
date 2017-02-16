@@ -8,5 +8,3 @@ def scan():
     if ('Samsung' in out):
         print('mama')
 
-main()
-
