@@ -1,18 +1,16 @@
 import sys
 import urllib.request
 from bs4 import BeautifulSoup
+import google
 
-def getProductURL(url):
-    html = urllib.request.urlopen(url)
-
-    soup = BeautifulSoup(html, "html.parser")
-
-    product_url = soup.find_all('a')#[104].get('href')
-    for p in product_url:
-        if '/p/' in p.get('href'):
-            return p.get('href')
-
-    ##return product_url
+def getProductURL(product):
+    query = product + ' ' + ' site:releases.com'
+    result = google.search(query)
+    try:
+        URL = next(result)
+        return URL
+    except:
+        return None
 
 
 def find(string, char):
@@ -22,7 +20,6 @@ def getStats(url):
     if not url :
         return "Sorry, nothing found."
 
-    url = 'http://www.releases.com' + url
     html = urllib.request.urlopen(url)
     soup = BeautifulSoup(html, "html.parser")
     soup = soup.findAll("div", attrs={"class" : " p-rl-autotext"})
@@ -34,13 +31,7 @@ def getStats(url):
     return description
 
 def getReleaseDate(ext):
-    ext = ext.replace(' ', '%20')
-    main_url = 'http://www.releases.com/search?q='
-    url = main_url + ext
-    print(url)
-
-    product_url = getProductURL(url)
-
+    product_url = getProductURL(ext)
     print(product_url)
-
     return getStats(product_url)
+
