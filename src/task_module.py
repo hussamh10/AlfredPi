@@ -12,6 +12,7 @@ import Lyrics
 import espeak
 import network
 import hltr
+import hltb
 
 class TaskModule(Module):
 
@@ -43,6 +44,8 @@ class TaskModule(Module):
             response.images = Wolfram.getImages(operation)
         if module == 'network':
             response.text = network.scan()
+        if module == 'hltb':
+            response.text = (hltb.getTimes(opertaion))
         if module == 'hltr':
             response.texts.append(hltr.getInfo(operation))
         if module == 'espeak':
