@@ -22,4 +22,6 @@ def getInfo(p):
     soup = BeautifulSoup(html, "html.parser")
     soup = soup.findAll("h2", attrs={"class" : "book-details"})
 
+    print(soup[0].text)
+
     return soup[0].text

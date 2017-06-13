@@ -44,7 +44,7 @@ class TaskModule(Module):
         if module == 'network':
             response.text = network.scan()
         if module == 'hltr':
-            response.text.append(hltr.getInfo(opertaion))
+            response.texts.append(hltr.getInfo(operation))
         if module == 'espeak':
             espeak.speak(operation)
             response.texts.append('Done, sir')
