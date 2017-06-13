@@ -1,23 +1,13 @@
 import sys
 import urllib.request
 from bs4 import BeautifulSoup
-import google
-
-def getProductURL(product):
-    query = product + ' ' + ' site:releases.com'
-    result = google.search(query)
-    try:
-        URL = next(result)
-        return URL
-    except:
-        return None
-
+from g_search import getUrl
 
 def find(string, char):
     return [i for i, ltr in enumerate(string) if ltr == char]
 
 def getStats(url):
-    if not url :
+    if url == 'None' :
         return "Sorry, nothing found."
 
     html = urllib.request.urlopen(url)
@@ -31,7 +21,7 @@ def getStats(url):
     return description
 
 def getReleaseDate(ext):
-    product_url = getProductURL(ext)
+    product_url = getURL(ext, 'releases.com')
     print(product_url)
     return getStats(product_url)
 

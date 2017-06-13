@@ -1,7 +1,7 @@
 import google
 
 def getUrl(q, site):
-    query = p + ' site:' + site
+    query = q + ' site:' + site
     result = google.search(query)
     try:
         URL = next(result)

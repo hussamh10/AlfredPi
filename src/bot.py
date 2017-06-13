@@ -43,10 +43,7 @@ class Bot():
                     return response[-1]['message']
 
     def sendMessage(self, message):
-        try:
-            self.telegram.sendMessage(self.chat_id, message)
-        except:
-            self.telegram.sendMessage(self.chat_id, 'I\'m sorry dave, I\'m afraid I can\'t do that (Error while sending)')
+        self.telegram.sendMessage(self.chat_id, message)
 
     def download(self, id, path):
         self.telegram.download_file(id, path)

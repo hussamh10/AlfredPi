@@ -2,6 +2,7 @@
 import argparse
 import sys
 import wikipedia
+import os
 
 def getSummary(query):
     info = wikipedia.page(query)
@@ -10,7 +11,9 @@ def getSummary(query):
     content = info.content
 
     summary = str(wikipedia.summary(query, sentences = 30))
+    summary = summary.encode('cp65001')
+    summary = str(summary)
+    summary =  summary.replace('\\n', os.linesep)
 
-
-    info = [title, url, summary] # can add content
+    info = title + os.linesep + url + os.linesep + summary
     return info
