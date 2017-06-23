@@ -6,6 +6,11 @@ import time
 import telepot
 from urllib import request
 import controller
+from autonomous_module import AutoModule
+
+
+def aa():
+    return 'haha'
 
 class Bot():
     def __init__(self, telegram):
@@ -13,7 +18,19 @@ class Bot():
         self.chat_id = None
         self.message_id = 0
 
+    def init_auto_bots(self):
+        m = AutoModule(self, aa, 5)
+        m.start()
+
+    def init(self):
+        print('first')
+        self.init_auto_bots()
+
     def handle(self, message):
+        if not self.chat_id:
+            self.chat_id = message['chat']['id']
+            self.init()
+
         self.chat_id = message['chat']['id']
         message_id = message['message_id']
 
